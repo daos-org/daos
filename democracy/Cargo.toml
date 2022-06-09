@@ -1,0 +1,56 @@
+[package]
+name       = "daos-democracy"
+version = "1.0.0"
+authors = ["LISTEN TEAM"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://github.com/LISTEN-DAOS/daos"
+repository = "https://github.com/LISTEN-DAOS/daos.git"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+scale-info 		      = { version = "2.0.1", default-features = false, features = ["derive"] }
+codec                 = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
+
+sp-std = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23' }
+sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23' }
+
+frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false, optional = true }
+frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+
+# orml
+orml-traits = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = 'polkadot-v0.9.23'}
+
+# local
+dao = { path = "../create-dao", package = "daos-create-dao", default-features = false}
+primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
+
+[dev-dependencies]
+serde      = { version = "1.0.101" }
+sp-core    = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+
+
+[features]
+default = ['std']
+
+std = [
+	'codec/std',
+	'scale-info/std',
+	'sp-std/std',
+	'frame-support/std',
+	'frame-system/std',
+	'orml-traits/std',
+	'sp-runtime/std',
+	'dao/std',
+]
+
+runtime-benchmarks = [
+	"frame-benchmarking/runtime-benchmarks",
+	"sp-runtime/runtime-benchmarks",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
+]

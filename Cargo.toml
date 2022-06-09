@@ -1,0 +1,12 @@
+[profile.release]
+panic = 'unwind'
+
+[workspace]
+members = [
+	"democracy",
+	"collective",
+	"doas",
+	"primitives",
+	"create-dao",
+	"sudo",
+]

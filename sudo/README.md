@@ -1,0 +1,1 @@
+Instead of democracy, dao's creator performs some methods that require dao_id permissions. This module will be removed when it goes live.
