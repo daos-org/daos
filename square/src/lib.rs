@@ -13,6 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// forked from https://github.com/paritytech/substrate/tree/master/frame/democracy
+// Only a small portion of the democracy module's code is used here, and the functionality varies considerably.
+// For better compatibility, it should be simple and easy to understand.
+// You can set a minimum vote value for each call.
+// If the "yes" vote is greater than the "no" vote and the minimum number of votes is met(That is, the probability of voting meets the requirement),
+// the call can dispatch.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::{Decode, Encode};

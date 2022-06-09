@@ -13,6 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// forked from https://github.com/paritytech/substrate/tree/master/frame/collective.
+// Much of the code here comes from substrate's collective module.
+// We can get a collective from every dao and vote to do something, and set ensure origin for every call freely.
+//
+// Remove EnsureMember, EnsureMembers, EnsureProportionAtLeast, EnsureProportionMoreThan, and so on.
+// In their place is the EnsureOriginWithArg.
+
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
