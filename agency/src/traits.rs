@@ -1,4 +1,3 @@
-
 use super::*;
 
 pub struct BadOrigin;
@@ -15,7 +14,12 @@ pub trait ChangeMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
 	/// new set is given by `new`, and need not be sorted.
 	///
 	/// This resets any previous value of prime.
-	fn change_members(dao_id: DaoId, incoming: &[AccountId], outgoing: &[AccountId], mut new: Vec<AccountId>) {
+	fn change_members(
+		dao_id: DaoId,
+		incoming: &[AccountId],
+		outgoing: &[AccountId],
+		mut new: Vec<AccountId>,
+	) {
 		new.sort();
 		Self::change_members_sorted(dao_id, incoming, outgoing, &new[..]);
 	}
@@ -87,7 +91,6 @@ pub trait ChangeMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
 		None
 	}
 }
-
 
 /// Some sort of check on the origin is performed by this object.
 pub trait EnsureOriginWithArg<OuterOrigin, Argument> {

@@ -29,18 +29,20 @@ pub use frame_support::{
 	traits::{Defensive, Get},
 	BoundedVec, RuntimeDebug,
 };
-use sp_std::boxed::Box;
-use orml_traits::{arithmetic::CheckedAdd, MultiCurrency, MultiReservableCurrency, MultiCurrencyExtended};
+use orml_traits::{
+	arithmetic::CheckedAdd, MultiCurrency, MultiCurrencyExtended, MultiReservableCurrency,
+};
 pub use pallet::*;
+use primitives::constant::weight::DAOS_BASE_WEIGHT;
 use scale_info::TypeInfo;
 pub use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{
 	traits::{BlockNumberProvider, CheckedMul},
 	DispatchError,
 };
+use sp_std::boxed::Box;
 pub use sp_std::{fmt::Debug, result};
 pub use traits::*;
-use primitives::constant::weight::DAOS_BASE_WEIGHT;
 
 pub type AssetId = u32;
 pub type PropIndex = u32;
@@ -114,7 +116,7 @@ pub mod pallet {
 	use super::*;
 	use dao::BaseDaoCallFilter;
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
-	use frame_system::{pallet_prelude::*};
+	use frame_system::pallet_prelude::*;
 
 	pub(crate) type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<
 		<T as frame_system::Config>::AccountId,
@@ -149,7 +151,7 @@ pub mod pallet {
 
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = AssetId>
 			+ MultiReservableCurrency<Self::AccountId>
-			 + MultiCurrencyExtended<Self::AccountId>;
+			+ MultiCurrencyExtended<Self::AccountId>;
 
 		#[pallet::constant]
 		type GetNativeCurrencyId: Get<AssetId>;
@@ -242,7 +244,8 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn min_vote_weight_of)]
-	pub type MinVoteWeightOf<T: Config> = StorageDoubleMap<_, Identity, T::DaoId, Identity, T::CallId, BalanceOf<T>, ValueQuery>;
+	pub type MinVoteWeightOf<T: Config> =
+		StorageDoubleMap<_, Identity, T::DaoId, Identity, T::CallId, BalanceOf<T>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn launch_tag)]
@@ -281,7 +284,6 @@ pub mod pallet {
 		VoteError,
 		VoteNotEnough,
 		VoteWeightTooLow,
-
 	}
 
 	#[pallet::hooks]
@@ -490,35 +492,37 @@ pub mod pallet {
 						if x.end.saturating_add(x.delay) < now {
 							return Err(Error::<T>::InDelayTime)?
 						} else {
-							let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone())
-								.ok()
-								.ok_or(dao::Error::<T>::HaveNoCallId)?;
+							let call_id: T::CallId =
+								TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone())
+									.ok()
+									.ok_or(dao::Error::<T>::HaveNoCallId)?;
 
-							if x.tally.ayes.saturating_add(x.tally.nays) >= MinVoteWeightOf::<T>::get(dao_id, call_id) {
+							if x.tally.ayes.saturating_add(x.tally.nays) >=
+								MinVoteWeightOf::<T>::get(dao_id, call_id)
+							{
 								if x.tally.ayes > x.tally.nays {
-								approved = true;
-								let res = x.proposal.dispatch_bypass_filter(
-									frame_system::RawOrigin::Signed(
-										dao::Pallet::<T>::get_second_id(dao_id)?.into_account(),
-									)
-									.into(),
-								);
-								Self::deposit_event(Event::EnactProposal {
-									dao_id,
-									index,
-									result: res.map(|_| ()).map_err(|e| e.error),
-								});
+									approved = true;
+									let res = x.proposal.dispatch_bypass_filter(
+										frame_system::RawOrigin::Signed(
+											dao::Pallet::<T>::get_second_id(dao_id)?.into_account(),
+										)
+										.into(),
+									);
+									Self::deposit_event(Event::EnactProposal {
+										dao_id,
+										index,
+										result: res.map(|_| ()).map_err(|e| e.error),
+									});
+								} else {
+									Self::deposit_event(Event::EnactProposal {
+										dao_id,
+										index,
+										result: Err(Error::<T>::VoteEndButNotPass)?,
+									});
+								}
 							} else {
-								Self::deposit_event(Event::EnactProposal {
-									dao_id,
-									index,
-									result: Err(Error::<T>::VoteEndButNotPass)?,
-								});
+								return Err(Error::<T>::VoteWeightTooLow)?
 							}
-							} else {
-								return Err(Error::<T>::VoteWeightTooLow)?;
-							}
-
 						}
 					},
 				_ => return Err(Error::<T>::ReferendumFinished)?,
@@ -580,7 +584,12 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn set_min_vote_weight_for_every_call(origin: OriginFor<T>, dao_id: T::DaoId, call: Box<<T as dao::Config>::Call>, min_vote_weight: BalanceOf<T>) -> DispatchResultWithPostInfo {
+		pub fn set_min_vote_weight_for_every_call(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			call: Box<<T as dao::Config>::Call>,
+			min_vote_weight: BalanceOf<T>,
+		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			ensure!(
 				dao::Pallet::<T>::get_second_id(dao_id)?.contains(*call.clone()),

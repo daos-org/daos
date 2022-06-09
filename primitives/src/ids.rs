@@ -138,4 +138,3 @@ impl<T: Encode + Decode> AccountIdConversion<T> for DaoId {
 		})
 	}
 }
-

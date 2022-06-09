@@ -16,13 +16,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
-pub use frame_support::{codec::{Decode, Encode}, traits::IsSubType};
+pub use frame_support::{
+	codec::{Decode, Encode},
+	traits::IsSubType,
+};
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	AccountIdConversion,
 	traits::{BaseDaoCallFilter, Checked, GetCollectiveMembers},
 	types::RealCallId,
+	AccountIdConversion,
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::traits::BlockNumberProvider;
@@ -52,9 +55,7 @@ pub struct DaoInfo<AccountId, BlockNumber, SecondId> {
 pub mod pallet {
 	use super::*;
 	use frame_support::{
-		dispatch::DispatchResultWithPostInfo,
-		pallet_prelude::*,
-		traits::{UnfilteredDispatchable},
+		dispatch::DispatchResultWithPostInfo, pallet_prelude::*, traits::UnfilteredDispatchable,
 		weights::GetDispatchInfo,
 	};
 	use frame_system::pallet_prelude::*;
@@ -65,7 +66,9 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type Call: Parameter + UnfilteredDispatchable<Origin = Self::Origin> + GetDispatchInfo
+		type Call: Parameter
+			+ UnfilteredDispatchable<Origin = Self::Origin>
+			+ GetDispatchInfo
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self>>
 			+ IsSubType<Call<Self>>
@@ -139,8 +142,8 @@ pub mod pallet {
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
 				second_id
-				.is_can_create(creator.clone(), dao_id)
-				.map_err(|_| Error::<T>::HaveNoCreatePermission)?;
+					.is_can_create(creator.clone(), dao_id)
+					.map_err(|_| Error::<T>::HaveNoCreatePermission)?;
 			}
 
 			let now = frame_system::Pallet::<T>::current_block_number();
@@ -153,13 +156,15 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn dao_remark(origin: OriginFor<T>, dao_id: T::DaoId, _remark: Vec<u8>) -> DispatchResultWithPostInfo {
+		pub fn dao_remark(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			_remark: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
 			Self::ensrue_dao_root(origin, dao_id)?;
 			Ok(().into())
 		}
 	}
-
-
 
 	impl<T: Config> Pallet<T> {
 		pub fn get_creator(

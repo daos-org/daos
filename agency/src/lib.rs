@@ -20,32 +20,26 @@
 // Remove EnsureMember, EnsureMembers, EnsureProportionAtLeast, EnsureProportionMoreThan, and so on.
 // In their place is the EnsureOriginWithArg.
 
-
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
 
 use dao;
 use frame_support::{
 	codec::{Decode, Encode},
-	dispatch::{
-		DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo,
-	},
+	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
 	ensure,
 	traits::{Backing, Get, GetBacking, StorageVersion},
 	weights::{GetDispatchInfo, Weight},
 };
+pub use pallet::*;
 use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{
-		EnsureOriginWithArg,
-		GetCollectiveMembers, GetCollectiveMembersChecked,
-	},
+	traits::{EnsureOriginWithArg, GetCollectiveMembers, GetCollectiveMembersChecked},
 	types::{DoAsEnsure, MemberCount, Proportion, ProposalIndex},
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
-pub use pallet::*;
 // #[cfg(test)]
 // mod tests;
 pub mod traits;
@@ -55,7 +49,6 @@ mod benchmarking;
 
 // pub mod weights;
 // pub use weights::WeightInfo;
-
 
 /// Default voting strategy when a member is inactive.
 pub trait DefaultVote {
@@ -147,7 +140,6 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use primitives::traits::BaseDaoCallFilter;
 
-
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(4);
 
@@ -216,17 +208,10 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
-
 	#[pallet::storage]
 	#[pallet::getter(fn collectives)]
-	pub type CollectiveMembers<T: Config<I>, I: 'static = ()> = StorageMap<
-		_,
-		Identity,
-		<T as dao::Config>::DaoId,
-		Vec<T::AccountId>,
-		ValueQuery
-	>;
-
+	pub type CollectiveMembers<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
 
 	#[pallet::type_value]
 	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> T::BlockNumber {
@@ -402,8 +387,7 @@ pub mod pallet {
 			ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
-			let result =
-				proposal.dispatch(RawOrigin::Member(dao_id).into());
+			let result = proposal.dispatch(RawOrigin::Member(dao_id).into());
 			Self::deposit_event(Event::MemberExecuted {
 				proposal_hash,
 				result: result.map(|_| ()).map_err(|e| e.error),
@@ -430,7 +414,10 @@ pub mod pallet {
 				Error::<T, I>::DuplicateProposal
 			);
 
-			ensure!(Self::members(dao_id, &who)?.len() as u32 >= threshold,  Error::<T, I>::ThresholdWrong);
+			ensure!(
+				Self::members(dao_id, &who)?.len() as u32 >= threshold,
+				Error::<T, I>::ThresholdWrong
+			);
 			if threshold < 2 {
 				let seats = Self::members(dao_id, &who)?.len() as MemberCount;
 				let result = proposal.dispatch(RawOrigin::Members(dao_id, 1, seats).into());
@@ -439,20 +426,16 @@ pub mod pallet {
 					result: result.map(|_| ()).map_err(|e| e.error),
 				});
 
-				Ok(()
-					.into())
+				Ok(().into())
 			} else {
-				let _ = <Proposals<T, I>>::try_mutate(
-					dao_id,
-					|proposals| -> DispatchResult {
-						proposals.push(proposal_hash);
-						ensure!(
-							proposals.len() as u32 <= MaxProposals::<T, I>::get(dao_id),
-							Error::<T, I>::WrongProposalLength
-						);
-						Ok(())
-					},
-				)?;
+				let _ = <Proposals<T, I>>::try_mutate(dao_id, |proposals| -> DispatchResult {
+					proposals.push(proposal_hash);
+					ensure!(
+						proposals.len() as u32 <= MaxProposals::<T, I>::get(dao_id),
+						Error::<T, I>::WrongProposalLength
+					);
+					Ok(())
+				})?;
 
 				let index = Self::proposal_count(dao_id);
 				<ProposalCount<T, I>>::mutate(dao_id, |i| *i += 1);
@@ -471,8 +454,7 @@ pub mod pallet {
 					threshold,
 				});
 
-				Ok(()
-				.into())
+				Ok(().into())
 			}
 		}
 
@@ -558,22 +540,15 @@ pub mod pallet {
 			let disapproved = seats.saturating_sub(no_votes) < voting.threshold;
 			// Allow (dis-)approving the proposal as soon as there are enough votes.
 			if approved {
-				let proposal = Self::validate_and_get_proposal(
-					&proposal_hash,
-					dao_id,
-				)?;
+				let proposal = Self::validate_and_get_proposal(&proposal_hash, dao_id)?;
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
 				let _ =
 					Self::do_approve_proposal(seats, yes_votes, proposal_hash, proposal, dao_id);
-				return Ok((
-				)
-					.into())
+				return Ok(().into())
 			} else if disapproved {
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
 				let _proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
-				return Ok((
-				)
-					.into())
+				return Ok(().into())
 			}
 
 			// Only allow actual closing of the proposal after the voting period has ended.
@@ -596,16 +571,11 @@ pub mod pallet {
 			let approved = yes_votes >= voting.threshold;
 
 			if approved {
-				let proposal = Self::validate_and_get_proposal(
-					&proposal_hash,
-					dao_id,
-				)?;
+				let proposal = Self::validate_and_get_proposal(&proposal_hash, dao_id)?;
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
 				let _ =
 					Self::do_approve_proposal(seats, yes_votes, proposal_hash, proposal, dao_id);
-				Ok((
-				)
-					.into())
+				Ok(().into())
 			} else {
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
 				let _proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
@@ -717,11 +687,15 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(members.contains(&who))
 	}
 
-	pub fn members(dao_id: T::DaoId, who: &T::AccountId) -> result::Result<Vec<T::AccountId>, DispatchError> {
+	pub fn members(
+		dao_id: T::DaoId,
+		who: &T::AccountId,
+	) -> result::Result<Vec<T::AccountId>, DispatchError> {
 		if cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-						return Ok(CollectiveMembers::<T, I>::get(dao_id));
+			return Ok(CollectiveMembers::<T, I>::get(dao_id))
 		} else {
-			let mut members = Self::get_members_sorted(dao_id, &T::GetCollectiveMembers::get_members(dao_id))?;
+			let mut members =
+				Self::get_members_sorted(dao_id, &T::GetCollectiveMembers::get_members(dao_id))?;
 			if members.is_empty() {
 				members.push(who.clone());
 				return Ok(members)
@@ -837,12 +811,14 @@ impl<T: Config<I>, I: 'static>
 			DoAsEnsure::Proportion(pro) => match pro {
 				Proportion::MoreThan(N, D) => o.into().and_then(|o| match o {
 					RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
-					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D > N * m => Ok(dao_id),
+					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D > N * m =>
+						Ok(dao_id),
 					r => Err(<T as Config<I>>::Origin::from(r)),
 				}),
 				Proportion::AtLeast(N, D) => o.into().and_then(|o| match o {
 					RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
-					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D >= N * m => Ok(dao_id),
+					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D >= N * m =>
+						Ok(dao_id),
 					r => Err(<T as Config<I>>::Origin::from(r)),
 				}),
 			},
@@ -865,7 +841,9 @@ impl<T: Config<I>, I: 'static>
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
-	fn successful_origin(a: &(<T as dao::Config>::DaoId, <T as dao::Config>::CallId)) -> <T as Config<I>>::Origin {
+	fn successful_origin(
+		a: &(<T as dao::Config>::DaoId, <T as dao::Config>::CallId),
+	) -> <T as Config<I>>::Origin {
 		<T as Config<I>>::Origin::from(RawOrigin::Root(a.0))
 	}
 }

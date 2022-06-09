@@ -1,11 +1,12 @@
-use frame_benchmarking::{account, benchmarks, benchmarks_instance_pallet, benchmarks_instance, impl_benchmark_test_suite, whitelisted_caller};
-use crate::Pallet as Sudo;
-use crate::Config;
+use super::*;
+use crate::{Call as SudoCall, Config, Pallet as Sudo};
+use dao::Call as DaoCall;
+use frame_benchmarking::{
+	account, benchmarks, benchmarks_instance, benchmarks_instance_pallet,
+	impl_benchmark_test_suite, whitelisted_caller,
+};
 use frame_system::RawOrigin as SystemOrigin;
 use primitives::AccountIdConversion;
-use dao::Call as DaoCall;
-use crate::Call as SudoCall;
-use super::*;
 use sp_std::vec;
 
 fn get_alice<T: Config>() -> T::AccountId {
@@ -19,15 +20,18 @@ fn get_dao_account<T: Config>(second_id: T::SecondId) -> T::AccountId {
 fn create_dao<T: Config>() -> (T::DaoId, T::SecondId) {
 	let second_id = T::SecondId::default();
 	let dao_id = T::DaoId::default();
-	assert!(dao::Pallet::<T>::create_dao(SystemOrigin::Signed(get_alice::<T>()).into(), dao_id, second_id.clone()).is_ok());
+	assert!(dao::Pallet::<T>::create_dao(
+		SystemOrigin::Signed(get_alice::<T>()).into(),
+		dao_id,
+		second_id.clone()
+	)
+	.is_ok());
 	(dao_id, second_id)
 }
 
 fn get_proposal<T: Config>(dao_id: T::DaoId) -> <T as dao::Config>::Call {
-	let proposal: <T as dao::Config>::Call = DaoCall::<T>::dao_remark {
-			dao_id: dao_id,
-			remark: vec![1; 20],
-		}.into();
+	let proposal: <T as dao::Config>::Call =
+		DaoCall::<T>::dao_remark { dao_id, remark: vec![1; 20] }.into();
 	proposal
 }
 

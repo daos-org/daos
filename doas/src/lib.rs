@@ -23,14 +23,14 @@ pub use frame_support::{
 	Parameter,
 };
 pub use pallet::*;
+use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use primitives::{
-	AccountIdConversion,
 	traits::EnsureOriginWithArg,
 	types::{DoAsEnsure, MemberCount, Proportion, RealCallId},
+	AccountIdConversion,
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
-use primitives::constant::weight::DAOS_BASE_WEIGHT;
 
 // #[cfg(test)]
 // mod mock;
@@ -45,9 +45,7 @@ mod benchmarking;
 pub mod pallet {
 	use super::*;
 	use frame_support::{
-		dispatch::{DispatchResultWithPostInfo},
-		pallet_prelude::*,
-		traits::{UnfilteredDispatchable},
+		dispatch::DispatchResultWithPostInfo, pallet_prelude::*, traits::UnfilteredDispatchable,
 	};
 	use frame_system::pallet_prelude::*;
 
