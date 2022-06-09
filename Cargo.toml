@@ -3,8 +3,8 @@ panic = 'unwind'
 
 [workspace]
 members = [
-	"democracy",
-	"collective",
+	"square",
+	"agency",
 	"doas",
 	"primitives",
 	"create-dao",

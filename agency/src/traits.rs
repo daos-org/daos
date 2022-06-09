@@ -80,10 +80,10 @@ pub trait ChangeMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
 	}
 
 	/// Set the prime member.
-	fn set_prime(dao_id: DaoId, _prime: Option<AccountId>) {}
+	fn set_prime(_dao_id: DaoId, _prime: Option<AccountId>) {}
 
 	/// Get the current prime.
-	fn get_prime(dao_id: DaoId) -> Option<AccountId> {
+	fn get_prime(_dao_id: DaoId) -> Option<AccountId> {
 		None
 	}
 }

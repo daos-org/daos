@@ -19,7 +19,7 @@ pub use codec::MaxEncodedLen;
 pub use frame_support::{codec::{Decode, Encode}, traits::IsSubType};
 pub use pallet::*;
 pub use primitives::{
-	constant::weight::DaosBaseWeight,
+	constant::weight::DAOS_BASE_WEIGHT,
 	AccountIdConversion,
 	traits::{BaseDaoCallFilter, Checked, GetCollectiveMembers},
 	types::RealCallId,
@@ -54,7 +54,7 @@ pub mod pallet {
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::*,
-		traits::{Contains, UnfilteredDispatchable},
+		traits::{UnfilteredDispatchable},
 		weights::GetDispatchInfo,
 	};
 	use frame_system::pallet_prelude::*;
@@ -128,7 +128,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn create_dao(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -152,7 +152,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn dao_remark(origin: OriginFor<T>, dao_id: T::DaoId, _remark: Vec<u8>) -> DispatchResultWithPostInfo {
 			Self::ensrue_dao_root(origin, dao_id)?;
 			Ok(().into())

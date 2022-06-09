@@ -28,12 +28,12 @@ pub use pallet::*;
 use scale_info::TypeInfo;
 pub use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{
-	traits::{BlockNumberProvider, CheckedMul, CheckedSub},
-	DispatchError, DispatchResult,
+	traits::{BlockNumberProvider, CheckedMul},
+	DispatchError,
 };
 pub use sp_std::{fmt::Debug, result};
 pub use traits::*;
-use primitives::constant::weight::DaosBaseWeight;
+use primitives::constant::weight::DAOS_BASE_WEIGHT;
 
 pub type AssetId = u32;
 pub type PropIndex = u32;
@@ -107,8 +107,7 @@ pub mod pallet {
 	use super::*;
 	use dao::BaseDaoCallFilter;
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
-	use frame_system::{pallet_prelude::*, Account};
-	use sp_runtime::traits::Convert;
+	use frame_system::{pallet_prelude::*};
 
 	pub(crate) type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<
 		<T as frame_system::Config>::AccountId,
@@ -283,7 +282,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn propose(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -314,7 +313,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn second(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -335,7 +334,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn start_table(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let tag = LaunchTag::<T>::get(dao_id);
@@ -353,7 +352,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn vote(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -412,7 +411,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn cancel_vote(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -465,7 +464,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn enact_proposal(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -526,7 +525,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn unlock(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let now = Self::now();
@@ -552,7 +551,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn unreserve(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let mut total = BalanceOf::<T>::from(0u32);
@@ -573,7 +572,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_min_vote_weight_for_every_call(origin: OriginFor<T>, dao_id: T::DaoId, call: Box<<T as dao::Config>::Call>, min_vote_weight: BalanceOf<T>) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			ensure!(
@@ -607,7 +606,7 @@ impl<T: Config> Pallet<T> {
 			let (prop_index, _, proposal, _) = public_props.swap_remove(winner_index);
 			<PublicProps<T>>::insert(dao_id, public_props);
 
-			if let Some((depositors, deposit)) = <DepositOf<T>>::take(dao_id, prop_index) {
+			if let Some(_) = <DepositOf<T>>::take(dao_id, prop_index) {
 				Ok(Self::inject_referendum(
 					dao_id,
 					now.saturating_add(T::VotingPeriod::get()),

@@ -368,7 +368,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "daos-collective"
+name = "daos-agency"
 version = "1.0.0"
 dependencies = [
  "daos-create-dao",
@@ -404,25 +404,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "daos-democracy"
-version = "1.0.0"
-dependencies = [
- "daos-create-dao",
- "daos-primitives",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "orml-traits",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "daos-doas"
 version = "1.0.0"
 dependencies = [
@@ -447,6 +428,25 @@ dependencies = [
  "frame-support",
  "parity-scale-codec",
  "scale-info",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "daos-square"
+version = "1.0.0"
+dependencies = [
+ "daos-create-dao",
+ "daos-primitives",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "orml-traits",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]

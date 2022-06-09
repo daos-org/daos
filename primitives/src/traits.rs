@@ -32,11 +32,11 @@ pub trait GetCollectiveMembers<AccountId: Clone + Ord, DaoId: Clone + Default + 
 impl<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> GetCollectiveMembers<AccountId, DaoId>
 	for ()
 {
-	fn get_members(dao_id: DaoId) -> Vec<AccountId> {
+	fn get_members(_dao_id: DaoId) -> Vec<AccountId> {
 		vec![]
 	}
 
-	fn get_prime(dao_id: DaoId) -> Option<AccountId> {
+	fn get_prime(_dao_id: DaoId) -> Option<AccountId> {
 		None
 	}
 }
@@ -49,8 +49,8 @@ impl<AccountId: Clone + Ord, DaoId: Clone + Default + Copy>
 	GetCollectiveMembersChecked<AccountId, DaoId, DispatchError> for ()
 {
 	fn get_members_sorted(
-		dao_id: DaoId,
-		members: &[AccountId],
+		_dao_id: DaoId,
+		_members: &[AccountId],
 	) -> result::Result<Vec<AccountId>, DispatchError> {
 		Ok(Vec::new())
 	}
@@ -132,10 +132,10 @@ pub trait ChangeMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
 	}
 
 	/// Set the prime member.
-	fn set_prime(dao_id: DaoId, _prime: Option<AccountId>) {}
+	fn set_prime(_dao_id: DaoId, _prime: Option<AccountId>) {}
 
 	/// Get the current prime.
-	fn get_prime(dao_id: DaoId) -> Option<AccountId> {
+	fn get_prime(_dao_id: DaoId) -> Option<AccountId> {
 		None
 	}
 }

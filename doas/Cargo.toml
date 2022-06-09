@@ -23,7 +23,6 @@ frame-system       = { git = 'https://github.com/paritytech/substrate', branch =
 # local
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
 dao = { path = "../create-dao", package = "daos-create-dao", default-features = false}
-#daos-collective = { path = "../collective", package = "daos-create-dao", default-features = false}
 
 [dev-dependencies]
 serde      = { version = "1.0.101" }

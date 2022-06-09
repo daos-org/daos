@@ -21,7 +21,6 @@ pub use frame_support::codec::{Decode, Encode};
 pub use scale_info::TypeInfo;
 pub use sp_runtime::RuntimeDebug;
 pub use sp_std::{prelude::*, result, vec};
-use frame_support::weights::Weight;
 pub mod constant;
 pub mod ids;
 pub mod traits;

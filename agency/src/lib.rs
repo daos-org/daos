@@ -13,37 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
 
 use dao;
-use daos_doas;
 use frame_support::{
 	codec::{Decode, Encode},
-	traits::IsSubType,
 	dispatch::{
 		DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo,
-		UnfilteredDispatchable,
 	},
 	ensure,
-	traits::{Backing, EnsureOrigin, Get, GetBacking, InitializeMembers, StorageVersion},
+	traits::{Backing, Get, GetBacking, StorageVersion},
 	weights::{GetDispatchInfo, Weight},
 };
 use primitives::{
-	constant::weight::DaosBaseWeight,
-	AccountIdConversion,
+	constant::weight::DAOS_BASE_WEIGHT,
 	traits::{
 		EnsureOriginWithArg,
-		ChangeMembers, GetCollectiveMembers, GetCollectiveMembersChecked,
+		GetCollectiveMembers, GetCollectiveMembersChecked,
 	},
-	types::{DoAsEnsure, MemberCount, Proportion, ProposalIndex, RealCallId},
+	types::{DoAsEnsure, MemberCount, Proportion, ProposalIndex},
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
-use sp_io::storage;
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
 pub use pallet::*;
-use primitives::traits::BadOrigin;
 // #[cfg(test)]
 // mod tests;
 pub mod traits;
@@ -117,7 +112,7 @@ pub enum RawOrigin<DaoId, I> {
 impl<AccountId, I> GetBacking for RawOrigin<AccountId, I> {
 	fn get_backing(&self) -> Option<Backing> {
 		match self {
-			RawOrigin::Members(dao_id, n, d) => Some(Backing { approvals: *n, eligible: *d }),
+			RawOrigin::Members(_dao_id, n, d) => Some(Backing { approvals: *n, eligible: *d }),
 			_ => None,
 		}
 	}
@@ -144,7 +139,7 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*, traits::Contains};
 	use frame_system::pallet_prelude::*;
 	use primitives::traits::BaseDaoCallFilter;
-	use sp_std::default::Default;
+
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(4);
@@ -390,7 +385,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		/// Dispatch a proposal from a member using the `Member` origin.
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn execute(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -411,7 +406,7 @@ pub mod pallet {
 		}
 
 		/// Add a new proposal to either be voted on or executed directly.
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn propose(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -475,7 +470,7 @@ pub mod pallet {
 		}
 
 		/// Add an aye or nay vote for the sender to the given proposal.
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn vote(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -536,7 +531,7 @@ pub mod pallet {
 		}
 
 		/// Close a vote that is either approved, disapproved or whose voting period has ended.
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn close(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -561,14 +556,14 @@ pub mod pallet {
 					dao_id,
 				)?;
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
-				let (proposal_weight, proposal_count) =
+				let _ =
 					Self::do_approve_proposal(seats, yes_votes, proposal_hash, proposal, dao_id);
 				return Ok((
 				)
 					.into())
 			} else if disapproved {
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
-				let proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
+				let _proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
 				return Ok((
 				)
 					.into())
@@ -599,32 +594,32 @@ pub mod pallet {
 					dao_id,
 				)?;
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
-				let (proposal_weight, proposal_count) =
+				let _ =
 					Self::do_approve_proposal(seats, yes_votes, proposal_hash, proposal, dao_id);
 				Ok((
 				)
 					.into())
 			} else {
 				Self::deposit_event(Event::Closed { proposal_hash, yes: yes_votes, no: no_votes });
-				let proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
+				let _proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
 				Ok(().into())
 			}
 		}
 
 		/// Disapprove a proposal, close, and remove it from the system, regardless of its current
 		/// state.
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn disapprove_proposal(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			proposal_hash: T::Hash,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
-			let proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
+			let _proposal_count = Self::do_disapprove_proposal(proposal_hash, dao_id);
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -636,7 +631,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_proposals(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -648,7 +643,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_members(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -660,7 +655,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_ensure_for_every_call(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -685,7 +680,6 @@ pub mod pallet {
 					Proportion::AtLeast(n, m) => {
 						ensure!(n <= m, Error::<T, I>::ProportionErr);
 					},
-					_ => {},
 				}
 			}
 
@@ -821,6 +815,7 @@ impl<T: Config<I>, I: 'static> GetCollectiveMembersChecked<T::AccountId, T::DaoI
 	}
 }
 
+#[allow(non_snake_case)]
 impl<T: Config<I>, I: 'static>
 	EnsureOriginWithArg<<T as pallet::Config<I>>::Origin, (T::DaoId, T::CallId)> for Pallet<T, I>
 {
@@ -851,7 +846,7 @@ impl<T: Config<I>, I: 'static>
 			}),
 			DoAsEnsure::Members(N) => o.into().and_then(|o| match o {
 				RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
-				RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n >= N => Ok(dao_id),
+				RawOrigin::Members(dao_id, n, _m) if dao_id == a.0 && n >= N => Ok(dao_id),
 				r => Err(<T as Config<I>>::Origin::from(r)),
 			}),
 

@@ -1,6 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use super::*;
-use sp_std::vec;
 
 pub trait Vote<VoteWeight, AccountId, SecondId, Convivtion, BlockNumber, DispatchError> {
 	fn try_vote(

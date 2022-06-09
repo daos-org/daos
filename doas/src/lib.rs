@@ -16,14 +16,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
-use codec::{Decode, Encode};
 use dao::{self, BaseDaoCallFilter};
 pub use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	pallet_prelude::StorageDoubleMap,
 	Parameter,
 };
-use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo};
 pub use pallet::*;
 pub use primitives::{
 	AccountIdConversion,
@@ -31,12 +29,8 @@ pub use primitives::{
 	types::{DoAsEnsure, MemberCount, Proportion, RealCallId},
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
-use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, Dispatchable, MaybeSerializeDeserialize, Member},
-	RuntimeDebug,
-};
 pub use sp_std::{fmt::Debug, result};
-use primitives::constant::weight::DaosBaseWeight;
+use primitives::constant::weight::DAOS_BASE_WEIGHT;
 
 // #[cfg(test)]
 // mod mock;
@@ -51,10 +45,9 @@ mod benchmarking;
 pub mod pallet {
 	use super::*;
 	use frame_support::{
-		dispatch::{DispatchResultWithPostInfo, RawOrigin},
+		dispatch::{DispatchResultWithPostInfo},
 		pallet_prelude::*,
-		traits::{Contains, UnfilteredDispatchable},
-		weights::GetDispatchInfo,
+		traits::{UnfilteredDispatchable},
 	};
 	use frame_system::pallet_prelude::*;
 
@@ -102,7 +95,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn do_as_collective(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,

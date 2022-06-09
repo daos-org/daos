@@ -20,7 +20,7 @@ pub use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo
 pub use pallet::*;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
-use primitives::constant::weight::DaosBaseWeight;
+use primitives::constant::weight::DAOS_BASE_WEIGHT;
 
 // #[cfg(test)]
 // mod mock;
@@ -78,7 +78,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn sudo(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -103,7 +103,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_sudo_account(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -117,7 +117,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(DaosBaseWeight)]
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn close_sudo(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,

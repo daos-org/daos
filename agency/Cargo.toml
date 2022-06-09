@@ -1,5 +1,5 @@
 [package]
-name       = "daos-collective"
+name       = "daos-agency"
 version = "1.0.0"
 authors = ["LISTEN TEAM"]
 edition = "2021"
