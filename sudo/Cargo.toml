@@ -11,12 +11,12 @@ repository = "https://github.com/LISTEN-DAOS/daos.git"
 [dependencies]
 scale-info 		      = { version = "2.0.1", default-features = false, features = ["derive"] }
 codec                 = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
-sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23' }
-sp-std = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23' }
+sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.24' }
+sp-std = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.24' }
 
-frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false, optional = true }
-frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
-frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.23', default-features = false }
+frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.24', default-features = false, optional = true }
+frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.24', default-features = false }
+frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.24', default-features = false }
 
 # local
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
