@@ -30,3 +30,10 @@ Any developer can create a DAO template with one click, and these DAO templates 
 The prerequisite for this is that the design of DAOS should be abstract enough. It does not need to consider how people vote or how specific institutions are elected.
 
 Free design by the developer. Daos is right distribution, it is free in all the outer design of specific groups, as long as you are in a project with DAO has a referendum rights agency requirements, and different groups to do similar things, such as social room management software, such as asset management, such as each project ico, then this project is your best choice.
+
+## Projects using daos
+* If you intend or are using daos, please add your project here  
+
+In alphabetical order
+* [Listen Network](https://github.com/listenofficial/listen-parachain)
+* [KICO](https://github.com/DICO-TEAM/dico-chain)
