@@ -3,7 +3,7 @@
 * As a developer, you can just focus on the design of the behavior template, leave the governance rules to us.
 * As a user, you can create any number of daos for yourself based on the behavior template.
 * As an eco-builder, this can help you really create groups, focus on sinking markets and hear small but meaningful voices. Help you achieve greater decentralization.
-
+* **Each DAO can perform external transactions as an ordinary user through intra-DAO governance**
 ## Develop
 * rust
 `curl https://sh.rustup.rs -sSf | sh`
