@@ -80,8 +80,8 @@ impl Default for Attitude {
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-pub struct VoteInfo<SecondId, Vote, BlockNumber, VoteWeight, Attitude, ReferendumIndex> {
-	second_id: SecondId,
+pub struct VoteInfo<ConcreteId, Vote, BlockNumber, VoteWeight, Attitude, ReferendumIndex> {
+	concrete_id: ConcreteId,
 	vote: Vote,
 	attitude: Attitude,
 	vote_weight: VoteWeight,
@@ -136,11 +136,11 @@ pub mod pallet {
 			+ Vote<
 				BalanceOf<Self>,
 				Self::AccountId,
-				Self::SecondId,
+				Self::ConcreteId,
 				Self::Conviction,
 				Self::BlockNumber,
 				DispatchError,
-			> + CheckedVote<Self::SecondId, DispatchError>;
+			> + CheckedVote<Self::ConcreteId, DispatchError>;
 
 		type Conviction: Clone
 			+ Default
@@ -237,7 +237,7 @@ pub mod pallet {
 		Identity,
 		T::AccountId,
 		Vec<
-			VoteInfo<T::SecondId, T::Vote, T::BlockNumber, BalanceOf<T>, Attitude, ReferendumIndex>,
+			VoteInfo<T::ConcreteId, T::Vote, T::BlockNumber, BalanceOf<T>, Attitude, ReferendumIndex>,
 		>,
 		ValueQuery,
 	>;
@@ -260,7 +260,7 @@ pub mod pallet {
 		Vote(T::DaoId, ReferendumIndex, T::Vote),
 		CancelVote(T::DaoId, ReferendumIndex),
 		EnactProposal { dao_id: T::DaoId, index: ReferendumIndex, result: DResult },
-		Unlock(T::AccountId, T::SecondId, T::Vote),
+		Unlock(T::AccountId, T::ConcreteId, T::Vote),
 		Unreserved(T::AccountId, BalanceOf<T>),
 		SetMinVoteWeight(T::DaoId, T::CallId, BalanceOf<T>),
 	}
@@ -300,7 +300,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			ensure!(
-				dao::Pallet::<T>::get_second_id(dao_id)?.contains(*proposal.clone()),
+				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
 			ensure!(value >= T::MinimumDeposit::get(), Error::<T>::ValueLow);
@@ -348,7 +348,7 @@ pub mod pallet {
 			let _ = ensure_signed(origin)?;
 			let tag = LaunchTag::<T>::get(dao_id);
 			let now = Self::now();
-			let dao_start_time = dao::Pallet::<T>::get_dao(dao_id)?.start_block;
+			let dao_start_time = dao::Pallet::<T>::try_get_dao(dao_id)?.start_block;
 			// (now - dao_start_time) / LaunchPeriod > tag
 			ensure!(
 				tag.checked_mul(&T::LaunchPeriod::get()).ok_or(Error::<T>::Overflow)? <
@@ -381,9 +381,9 @@ pub mod pallet {
 					let mut info = h.take().ok_or(Error::<T>::ReferendumNotExists)?;
 					if let ReferendumInfo::Ongoing(ref mut x) = info {
 						if x.end > now {
-							let second_id = dao::Pallet::<T>::get_second_id(dao_id)?;
-							ensure!(vote.is_can_vote(second_id.clone())?, Error::<T>::VoteError);
-							let vote_result = vote.try_vote(&who, &second_id, &conviction)?;
+							let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
+							ensure!(vote.is_can_vote(concrete_id.clone())?, Error::<T>::VoteError);
+							let vote_result = vote.try_vote(&who, &concrete_id, &conviction)?;
 							vote_weight = vote_result.0;
 							let duration = vote_result.1;
 							match attitude {
@@ -397,7 +397,7 @@ pub mod pallet {
 							VotesOf::<T>::append(
 								&who,
 								VoteInfo {
-									second_id,
+									concrete_id,
 									vote,
 									attitude,
 									vote_weight,
@@ -438,7 +438,7 @@ pub mod pallet {
 							let mut votes = VotesOf::<T>::get(&who);
 							votes.retain(|h| {
 								if h.referendum_index == index {
-									if h.vote.vote_end_do(&who, &h.second_id).is_err() {
+									if h.vote.vote_end_do(&who, &h.concrete_id).is_err() {
 										true
 									} else {
 										match h.attitude {
@@ -504,7 +504,7 @@ pub mod pallet {
 									approved = true;
 									let res = x.proposal.dispatch_bypass_filter(
 										frame_system::RawOrigin::Signed(
-											dao::Pallet::<T>::get_second_id(dao_id)?.into_account(),
+											dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account(),
 										)
 										.into(),
 									);
@@ -546,12 +546,12 @@ pub mod pallet {
 				if h.unlock_block > now {
 					true
 				} else {
-					if h.vote.vote_end_do(&who, &h.second_id).is_err() {
+					if h.vote.vote_end_do(&who, &h.concrete_id).is_err() {
 						true
 					} else {
 						Self::deposit_event(Event::<T>::Unlock(
 							who.clone(),
-							h.second_id.clone(),
+							h.concrete_id.clone(),
 							h.vote,
 						));
 						false
@@ -592,7 +592,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			ensure!(
-				dao::Pallet::<T>::get_second_id(dao_id)?.contains(*call.clone()),
+				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())

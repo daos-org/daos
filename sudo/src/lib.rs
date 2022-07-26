@@ -87,14 +87,14 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			let sudo = Self::get_sudo_account(dao_id, IsMustDemocracy::<T>::get(dao_id))?;
 			ensure!(sudo == who, Error::<T>::NotSudo);
-			let second_id = dao::Pallet::<T>::get_second_id(dao_id)?;
-			ensure!(second_id.contains(*call.clone()), dao::Error::<T>::NotDaoSupportCall);
+			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
+			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::NotDaoSupportCall);
 			let _: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
 				.ok()
 				.ok_or(dao::Error::<T>::HaveNoCallId)?;
 
 			let res = call.dispatch_bypass_filter(
-				frame_system::RawOrigin::Signed(second_id.into_account()).into(),
+				frame_system::RawOrigin::Signed(concrete_id.into_account()).into(),
 			);
 			Self::deposit_event(SudoDone {
 				sudo,
@@ -138,11 +138,11 @@ pub mod pallet {
 			is_must_democracy: bool,
 		) -> result::Result<T::AccountId, DispatchError> {
 			if is_must_democracy {
-				Ok(dao::Pallet::<T>::get_second_id(dao_id)?.into_account())
+				Ok(dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account())
 			} else {
 				Ok(SudoAccount::<T>::get(dao_id).unwrap_or(
-					dao::Pallet::<T>::get_creator(dao_id)
-						.unwrap_or(dao::Pallet::<T>::get_second_id(dao_id)?.into_account()),
+					dao::Pallet::<T>::try_get_creator(dao_id)
+						.unwrap_or(dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account()),
 				))
 			}
 		}

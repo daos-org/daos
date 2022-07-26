@@ -23,7 +23,7 @@ pub use frame_support::{
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{BaseDaoCallFilter, Checked, GetCollectiveMembers},
+	traits::{BaseDaoCallFilter, TryCreate, GetCollectiveMembers},
 	types::RealCallId,
 	AccountIdConversion,
 };
@@ -45,10 +45,10 @@ pub use sp_std::{
 mod benchmarking;
 
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
-pub struct DaoInfo<AccountId, BlockNumber, SecondId> {
+pub struct DaoInfo<AccountId, BlockNumber, ConcreteId> {
 	creator: AccountId,
 	pub start_block: BlockNumber,
-	id: SecondId,
+	id: ConcreteId,
 }
 
 #[frame_support::pallet]
@@ -72,6 +72,7 @@ pub mod pallet {
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self>>
 			+ IsSubType<Call<Self>>
+			+ TryInto<Self::CallId>
 			+ IsType<<Self as frame_system::Config>::Call>;
 
 		type CallId: Parameter
@@ -84,7 +85,7 @@ pub mod pallet {
 
 		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen;
 
-		type SecondId: Parameter
+		type ConcreteId: Parameter
 			+ Member
 			+ TypeInfo
 			+ MaxEncodedLen
@@ -92,7 +93,7 @@ pub mod pallet {
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
 			+ BaseDaoCallFilter<<Self as pallet::Config>::Call>
-			+ Checked<Self::AccountId, Self::DaoId, DispatchError>;
+			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
 	}
 
 	#[pallet::pallet]
@@ -103,13 +104,13 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn daos)]
 	pub type Daos<T: Config> =
-		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::SecondId>>;
+		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		SomethingStored(u32, T::AccountId),
-		CreatedDao(T::AccountId, T::DaoId, T::SecondId),
+		CreatedDao(T::AccountId, T::DaoId, T::ConcreteId),
 	}
 
 	#[pallet::error]
@@ -135,23 +136,23 @@ pub mod pallet {
 		pub fn create_dao(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			second_id: T::SecondId,
+			concrete_id: T::ConcreteId,
 		) -> DispatchResultWithPostInfo {
 			let creator = ensure_signed(origin)?;
 			ensure!(!Daos::<T>::contains_key(dao_id), Error::<T>::DaoExists);
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				second_id
-					.is_can_create(creator.clone(), dao_id)
+				concrete_id
+					.try_create(creator.clone(), dao_id)
 					.map_err(|_| Error::<T>::HaveNoCreatePermission)?;
 			}
 
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, id: second_id.clone() },
+				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone() },
 			);
-			Self::deposit_event(Event::CreatedDao(creator, dao_id, second_id));
+			Self::deposit_event(Event::CreatedDao(creator, dao_id, concrete_id));
 			Ok(().into())
 		}
 
@@ -167,23 +168,23 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn get_creator(
+		pub fn try_get_creator(
 			dao_id: <T as pallet::Config>::DaoId,
 		) -> result::Result<T::AccountId, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao.creator)
 		}
 
-		pub fn get_dao(
+		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::SecondId>, DispatchError> {
+		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}
 
-		pub fn get_second_id(
+		pub fn try_get_concrete_id(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<T::SecondId, DispatchError> {
+		) -> result::Result<T::ConcreteId, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao.id)
 		}
@@ -193,8 +194,8 @@ pub mod pallet {
 			dao_id: T::DaoId,
 		) -> Result<T::AccountId, DispatchError> {
 			let who = ensure_signed(o)?;
-			let second_id = Self::get_second_id(dao_id)?;
-			ensure!(who == second_id.into_account(), Error::<T>::BadOrigin);
+			let concrete_id = Self::try_get_concrete_id(dao_id)?;
+			ensure!(who == concrete_id.into_account(), Error::<T>::BadOrigin);
 			Ok(who)
 		}
 	}

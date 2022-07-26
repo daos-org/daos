@@ -642,7 +642,7 @@ pub mod pallet {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 
 			ensure!(
-				dao::Pallet::<T>::get_second_id(dao_id)?.contains(*call.clone()),
+				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
 

@@ -41,8 +41,8 @@ impl<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> GetCollectiveMembers
 	}
 }
 
-pub trait Checked<AccountId: Clone + Ord, DaoId: Clone, DispatchError> {
-	fn is_can_create(&self, who: AccountId, dao_id: DaoId) -> result::Result<(), DispatchError>;
+pub trait TryCreate<AccountId: Clone + Ord, DaoId: Clone, DispatchError> {
+	fn try_create(&self, who: AccountId, dao_id: DaoId) -> result::Result<(), DispatchError>;
 }
 
 impl<AccountId: Clone + Ord, DaoId: Clone + Default + Copy>

@@ -100,7 +100,7 @@ pub mod pallet {
 			call: Box<<T as dao::Config>::Call>,
 		) -> DispatchResultWithPostInfo {
 			ensure!(
-				dao::Pallet::<T>::get_second_id(dao_id)?.contains(*call.clone()),
+				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
@@ -110,8 +110,8 @@ pub mod pallet {
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| Error::<T>::BadOrigin)?;
 			ensure!(dao_id == id, dao::Error::<T>::NotDaoId);
-			let second_id = dao::Pallet::<T>::get_second_id(dao_id)?;
-			let dao_account = second_id.into_account();
+			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
+			let dao_account = concrete_id.into_account();
 			let res =
 				call.dispatch_bypass_filter(frame_system::RawOrigin::Signed(dao_account).into());
 			Self::deposit_event(Event::DoAsDone {
