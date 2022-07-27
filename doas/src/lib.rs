@@ -26,7 +26,7 @@ pub use pallet::*;
 use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use primitives::{
 	traits::EnsureOriginWithArg,
-	types::{DoAsEnsure, MemberCount, Proportion, RealCallId},
+	types::{DoAsEnsureOrigin, MemberCount, Proportion, RealCallId},
 	AccountIdConversion,
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
@@ -69,7 +69,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SetEnsure(T::DaoId, u32, DoAsEnsure<Proportion<MemberCount>, MemberCount>),
+		SetEnsure(T::DaoId, u32, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
 		DoAsDone { sudo_result: DispatchResult },
 	}
 

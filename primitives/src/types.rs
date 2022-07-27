@@ -24,7 +24,7 @@ impl Default for Proportion<MemberCount> {
 }
 
 #[derive(PartialEq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen)]
-pub enum DoAsEnsure<Pro, C> {
+pub enum DoAsEnsureOrigin<Pro, C> {
 	Proportion(Pro),
 	Member,
 	Members(C),
@@ -32,7 +32,7 @@ pub enum DoAsEnsure<Pro, C> {
 	NoPermission,
 }
 
-impl<Pro: Default, C: Default> Default for DoAsEnsure<Pro, C> {
+impl<Pro: Default, C: Default> Default for DoAsEnsureOrigin<Pro, C> {
 	fn default() -> Self {
 		Self::Root
 	}

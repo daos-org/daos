@@ -72,7 +72,6 @@ pub mod pallet {
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self>>
 			+ IsSubType<Call<Self>>
-			+ TryInto<Self::CallId>
 			+ IsType<<Self as frame_system::Config>::Call>;
 
 		type CallId: Parameter
