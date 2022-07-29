@@ -23,7 +23,7 @@ pub use frame_support::{
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{BaseDaoCallFilter, TryCreate, GetCollectiveMembers},
+	traits::{BaseDaoCallFilter, GetCollectiveMembers, TryCreate},
 	types::RealCallId,
 	AccountIdConversion,
 };

@@ -155,24 +155,6 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type GetNativeCurrencyId: Get<AssetId>;
-
-		#[pallet::constant]
-		type MaxPublicProps: Get<u32>;
-
-		#[pallet::constant]
-		type LaunchPeriod: Get<Self::BlockNumber>;
-
-		#[pallet::constant]
-		type MinimumDeposit: Get<BalanceOf<Self>>;
-
-		#[pallet::constant]
-		type VotingPeriod: Get<Self::BlockNumber>;
-
-		#[pallet::constant]
-		type ReservePeriod: Get<Self::BlockNumber>;
-
-		#[pallet::constant]
-		type EnactmentPeriod: Get<Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -183,6 +165,56 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn public_prop_count)]
 	pub type PublicPropCount<T: Config> = StorageMap<_, Identity, T::DaoId, PropIndex, ValueQuery>;
+
+	#[pallet::type_value]
+	pub fn MaxPublicPropsOnEmpty() -> PropIndex {
+		100u32
+	}
+	#[pallet::storage]
+	#[pallet::getter(fn max_public_props)]
+	pub type MaxPublicProps<T: Config> =
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, MaxPublicPropsOnEmpty>;
+
+	#[pallet::type_value]
+	pub fn LaunchPeriodOnEmpty<T: Config>() -> T::BlockNumber {
+		T::BlockNumber::from(900u32)
+	}
+	#[pallet::storage]
+	#[pallet::getter(fn launch_period)]
+	pub type LaunchPeriod<T: Config> =
+		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, LaunchPeriodOnEmpty<T>>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn minimum_deposit)]
+	pub type MinimumDeposit<T: Config> =
+		StorageMap<_, Identity, T::DaoId, BalanceOf<T>, ValueQuery>;
+
+	#[pallet::type_value]
+	pub fn VotingPeriodOnEmpty<T: Config>() -> T::BlockNumber {
+		T::BlockNumber::from(900u32)
+	}
+	#[pallet::storage]
+	#[pallet::getter(fn voting_period)]
+	pub type VotingPeriod<T: Config> =
+		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, VotingPeriodOnEmpty<T>>;
+
+	#[pallet::type_value]
+	pub fn ReservePeriodOnEmpty<T: Config>() -> T::BlockNumber {
+		T::BlockNumber::from(900u32)
+	}
+	#[pallet::storage]
+	#[pallet::getter(fn reserve_period)]
+	pub type ReservePeriod<T: Config> =
+		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, ReservePeriodOnEmpty<T>>;
+
+	#[pallet::type_value]
+	pub fn EnactmentPeriodOnEmpty<T: Config>() -> T::BlockNumber {
+		T::BlockNumber::from(900u32)
+	}
+	#[pallet::storage]
+	#[pallet::getter(fn enactment_period)]
+	pub type EnactmentPeriod<T: Config> =
+		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, EnactmentPeriodOnEmpty<T>>;
 
 	/// The public proposals. Unsorted. The second item is the proposal's hash.
 	#[pallet::storage]
@@ -237,7 +269,14 @@ pub mod pallet {
 		Identity,
 		T::AccountId,
 		Vec<
-			VoteInfo<T::ConcreteId, T::Vote, T::BlockNumber, BalanceOf<T>, Attitude, ReferendumIndex>,
+			VoteInfo<
+				T::ConcreteId,
+				T::Vote,
+				T::BlockNumber,
+				BalanceOf<T>,
+				Attitude,
+				ReferendumIndex,
+			>,
 		>,
 		ValueQuery,
 	>;
@@ -263,6 +302,12 @@ pub mod pallet {
 		Unlock(T::AccountId, T::ConcreteId, T::Vote),
 		Unreserved(T::AccountId, BalanceOf<T>),
 		SetMinVoteWeight(T::DaoId, T::CallId, BalanceOf<T>),
+		SetMaxPublicProps { dao_id: T::DaoId, max: u32 },
+		SetLaunchPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetMinimumDeposit { dao_id: T::DaoId, min: BalanceOf<T> },
+		SetVotingPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetReservePeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetEnactmentPeriod { dao_id: T::DaoId, period: T::BlockNumber },
 	}
 
 	// Errors inform users that something went wrong.
@@ -303,12 +348,12 @@ pub mod pallet {
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
-			ensure!(value >= T::MinimumDeposit::get(), Error::<T>::ValueLow);
+			ensure!(value >= MinimumDeposit::<T>::get(dao_id), Error::<T>::ValueLow);
 
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			let index = Self::public_prop_count(dao_id);
 			let real_prop_count = PublicProps::<T>::decode_len(dao_id).unwrap_or(0) as u32;
-			let max_proposals = T::MaxPublicProps::get();
+			let max_proposals = MaxPublicProps::<T>::get(dao_id);
 			ensure!(real_prop_count < max_proposals, Error::<T>::TooManyProposals);
 
 			T::MultiCurrency::reserve(T::GetNativeCurrencyId::get(), &who, value)?;
@@ -335,8 +380,9 @@ pub mod pallet {
 			T::MultiCurrency::reserve(T::GetNativeCurrencyId::get(), &who, deposit_amount)?;
 			deposit.0.push(who.clone());
 			<DepositOf<T>>::insert(dao_id, proposal, deposit);
-			let unreserved_block =
-				Self::now().checked_add(&T::ReservePeriod::get()).ok_or(Error::<T>::Overflow)?;
+			let unreserved_block = Self::now()
+				.checked_add(&ReservePeriod::<T>::get(dao_id))
+				.ok_or(Error::<T>::Overflow)?;
 			ReserveOf::<T>::append(who.clone(), (deposit_amount, unreserved_block));
 			Self::deposit_event(Event::<T>::Second(dao_id, deposit_amount));
 
@@ -351,7 +397,7 @@ pub mod pallet {
 			let dao_start_time = dao::Pallet::<T>::try_get_dao(dao_id)?.start_block;
 			// (now - dao_start_time) / LaunchPeriod > tag
 			ensure!(
-				tag.checked_mul(&T::LaunchPeriod::get()).ok_or(Error::<T>::Overflow)? <
+				tag.checked_mul(&LaunchPeriod::<T>::get(dao_id)).ok_or(Error::<T>::Overflow)? <
 					(now - dao_start_time),
 				Error::<T>::NotTableTime
 			);
@@ -504,7 +550,8 @@ pub mod pallet {
 									approved = true;
 									let res = x.proposal.dispatch_bypass_filter(
 										frame_system::RawOrigin::Signed(
-											dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account(),
+											dao::Pallet::<T>::try_get_concrete_id(dao_id)?
+												.into_account(),
 										)
 										.into(),
 									);
@@ -603,6 +650,84 @@ pub mod pallet {
 
 			Ok(().into())
 		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_max_public_props(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			max: u32,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			MaxPublicProps::<T>::insert(dao_id, max);
+			Self::deposit_event(Event::<T>::SetMaxPublicProps { dao_id, max });
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_launch_period(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			period: T::BlockNumber,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			LaunchPeriod::<T>::insert(dao_id, period);
+			Self::deposit_event(Event::<T>::SetLaunchPeriod { dao_id, period });
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_minimum_deposit(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			min: BalanceOf<T>,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			MinimumDeposit::<T>::insert(dao_id, min);
+			Self::deposit_event(Event::<T>::SetMinimumDeposit { dao_id, min });
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_voting_period(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			period: T::BlockNumber,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			VotingPeriod::<T>::insert(dao_id, period);
+			Self::deposit_event(Event::<T>::SetVotingPeriod { dao_id, period });
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_rerserve_period(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			period: T::BlockNumber,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			ReservePeriod::<T>::insert(dao_id, period);
+			Self::deposit_event(Event::<T>::SetReservePeriod { dao_id, period });
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		pub fn set_enactment_period(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			period: T::BlockNumber,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			EnactmentPeriod::<T>::insert(dao_id, period);
+			Self::deposit_event(Event::<T>::SetEnactmentPeriod { dao_id, period });
+
+			Ok(().into())
+		}
 	}
 }
 
@@ -625,9 +750,9 @@ impl<T: Config> Pallet<T> {
 			if let Some(_) = <DepositOf<T>>::take(dao_id, prop_index) {
 				Ok(Self::inject_referendum(
 					dao_id,
-					now.saturating_add(T::VotingPeriod::get()),
+					now.saturating_add(VotingPeriod::<T>::get(dao_id)),
 					proposal,
-					T::EnactmentPeriod::get(),
+					EnactmentPeriod::<T>::get(dao_id),
 				))
 			} else {
 				Err(Error::<T>::NoneWaiting)?

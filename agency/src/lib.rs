@@ -649,6 +649,7 @@ pub mod pallet {
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
 				.ok()
 				.ok_or(dao::Error::<T>::HaveNoCallId)?;
+
 			if let DoAsEnsureOrigin::Proportion(x) = ensure.clone() {
 				match x {
 					Proportion::MoreThan(n, m) => {
