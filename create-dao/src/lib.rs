@@ -91,7 +91,7 @@ pub mod pallet {
 			+ Clone
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
-			// + BaseCallFilter<<Self as pallet::Config>::Call>
+			+ BaseCallFilter<<Self as pallet::Config>::Call>
 			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
 	}
 

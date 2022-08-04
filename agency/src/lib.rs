@@ -654,15 +654,6 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 
-			// ensure!(
-			// 	dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-			// 	dao::Error::<T>::NotDaoSupportCall
-			// );
-
-			// let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-			// 	.ok()
-			// 	.ok_or(dao::Error::<T>::HaveNoCallId)?;
-
 			if let DoAsEnsureOrigin::Proportion(x) = ensure.clone() {
 				match x {
 					Proportion::MoreThan(n, m) => {
@@ -674,7 +665,6 @@ pub mod pallet {
 				}
 			}
 
-			// let real_id = call_id.try_into().ok().ok_or(dao::Error::<T>::InVailCallId)?;
 			Ensures::<T, I>::insert(dao_id, call_id, ensure.clone());
 			Self::deposit_event(Event::SetEnsure(dao_id, call_id, ensure));
 			Ok(().into())
