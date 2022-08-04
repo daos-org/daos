@@ -23,7 +23,7 @@ pub use frame_support::{
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{BaseDaoCallFilter, GetCollectiveMembers, TryCreate},
+	traits::{BaseCallFilter, GetCollectiveMembers, TryCreate},
 	types::RealCallId,
 	AccountIdConversion,
 };
@@ -91,7 +91,7 @@ pub mod pallet {
 			+ Clone
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
-			+ BaseDaoCallFilter<<Self as pallet::Config>::Call>
+			// + BaseCallFilter<<Self as pallet::Config>::Call>
 			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
 	}
 

@@ -138,7 +138,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{pallet_prelude::*, traits::Contains};
 	use frame_system::pallet_prelude::*;
-	use primitives::traits::BaseDaoCallFilter;
+	// use primitives::traits::BaseCallFilter;
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(4);

@@ -9,7 +9,7 @@ impl From<BadOrigin> for &'static str {
 	}
 }
 
-pub trait BaseDaoCallFilter<Call> {
+pub trait BaseCallFilter<Call> {
 	fn contains(&self, call: Call) -> bool;
 }
 pub trait GetCollectiveMembersChecked<

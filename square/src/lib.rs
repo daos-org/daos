@@ -114,7 +114,7 @@ pub enum ReferendumInfo<BlockNumber, Call, Balance> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use dao::BaseDaoCallFilter;
+	use dao::BaseCallFilter;
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
@@ -344,10 +344,10 @@ pub mod pallet {
 			#[pallet::compact] value: BalanceOf<T>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(
-				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
-				dao::Error::<T>::NotDaoSupportCall
-			);
+			// ensure!(
+			// 	dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
+			// 	dao::Error::<T>::NotDaoSupportCall
+			// );
 			ensure!(value >= MinimumDeposit::<T>::get(dao_id), Error::<T>::ValueLow);
 
 			let proposal_hash = T::Hashing::hash_of(&proposal);
@@ -642,10 +642,10 @@ pub mod pallet {
 			min_vote_weight: BalanceOf<T>,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
-			ensure!(
-				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
-			);
+			// ensure!(
+			// 	dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
+			// 	dao::Error::<T>::NotDaoSupportCall
+			// );
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
 				.ok()
 				.ok_or(dao::Error::<T>::HaveNoCallId)?;

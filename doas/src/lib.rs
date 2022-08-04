@@ -16,7 +16,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
-use dao::{self, BaseDaoCallFilter};
+use dao::{self, BaseCallFilter};
 pub use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	pallet_prelude::StorageDoubleMap,
@@ -99,10 +99,10 @@ pub mod pallet {
 			dao_id: T::DaoId,
 			call: Box<<T as dao::Config>::Call>,
 		) -> DispatchResultWithPostInfo {
-			ensure!(
-				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
-			);
+			// ensure!(
+			// 	dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
+			// 	dao::Error::<T>::NotDaoSupportCall
+			// );
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
 				.ok()
 				.ok_or(Error::<T>::HaveNoCallId)?;
