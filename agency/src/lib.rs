@@ -583,8 +583,9 @@ pub mod pallet {
 			}
 		}
 
-		/// Disapprove a proposal, close, and remove it from the system, regardless of its current
-		/// state.
+		/// (daos support. call name: disapprove_proposal, call id:201)
+		///
+		/// Disapprove a proposal, close, and remove it from the system, regardless of its current state.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn disapprove_proposal(
 			origin: OriginFor<T>,
@@ -596,6 +597,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_motion_duration, call id:202)
+		///
+		/// 设置提案投票的时长
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
@@ -608,6 +612,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_max_proposals, call id:203)
+		///
+		/// 设置议会提案数目的上限
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_proposals(
 			origin: OriginFor<T>,
@@ -620,6 +627,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_max_members, call id:204)
+		///
+		/// 设置议会人数上限
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_members(
 			origin: OriginFor<T>,
@@ -632,23 +642,26 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_ensure_origin_for_every_call, call id:205)
+		///
+		/// 给daos支持的每一个交易设置议会执行权限.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_ensure_origin_for_every_call(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			call: Box<<T as dao::Config>::Call>,
+			call_id: T::CallId,
 			ensure: DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 
-			ensure!(
-				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
-			);
+			// ensure!(
+			// 	dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
+			// 	dao::Error::<T>::NotDaoSupportCall
+			// );
 
-			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-				.ok()
-				.ok_or(dao::Error::<T>::HaveNoCallId)?;
+			// let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
+			// 	.ok()
+			// 	.ok_or(dao::Error::<T>::HaveNoCallId)?;
 
 			if let DoAsEnsureOrigin::Proportion(x) = ensure.clone() {
 				match x {

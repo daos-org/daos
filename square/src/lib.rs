@@ -630,6 +630,10 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// (daos support. call name: set_min_vote_weight_for_every_call, call id:301)
+		///
+		/// 给daos支持的每一个交易设置公投权限
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_min_vote_weight_for_every_call(
 			origin: OriginFor<T>,
@@ -651,6 +655,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_max_public_props, call id:302)
+		///
+		/// 设置公投数目上限
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_public_props(
 			origin: OriginFor<T>,
@@ -664,6 +671,10 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// (daos support. call name: set_launch_period, call id:303)
+		///
+		/// 设置公投周期（多久可以发起一个公投）
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_launch_period(
 			origin: OriginFor<T>,
@@ -677,6 +688,10 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// (daos support. call name: set_minimum_deposit, call id:304)
+		///
+		/// 设置提公投需要抵押的最小金额
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_minimum_deposit(
 			origin: OriginFor<T>,
@@ -690,6 +705,10 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// (daos support. call name: set_minimum_deposit, call id:305)
+		///
+		/// 设置投票的时长
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_voting_period(
 			origin: OriginFor<T>,
@@ -703,6 +722,10 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// (daos support. call name: set_rerserve_period, call id:306)
+		///
+		/// 设置提公投时候抵押的金额多久能够解抵押
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_rerserve_period(
 			origin: OriginFor<T>,
@@ -716,6 +739,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// (daos support. call name: set_enactment_period, call id:307)
+		///
+		/// 设置提案延迟执行的时间
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_enactment_period(
 			origin: OriginFor<T>,
