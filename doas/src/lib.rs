@@ -103,9 +103,7 @@ pub mod pallet {
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::NotDaoSupportCall
 			);
-			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-				.ok()
-				.ok_or(Error::<T>::HaveNoCallId)?;
+			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| Error::<T>::BadOrigin)?;

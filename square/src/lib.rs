@@ -539,9 +539,7 @@ pub mod pallet {
 							return Err(Error::<T>::InDelayTime)?
 						} else {
 							let call_id: T::CallId =
-								TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone())
-									.ok()
-									.ok_or(dao::Error::<T>::HaveNoCallId)?;
+								TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone()).unwrap_or_default();
 
 							if x.tally.ayes.saturating_add(x.tally.nays) >=
 								MinVoteWeightOf::<T>::get(dao_id, call_id)
