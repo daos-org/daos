@@ -155,7 +155,6 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-
 		/// (daos support. call name: dao_remark, call id:101)
 		///
 		/// dao记录某件事

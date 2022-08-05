@@ -630,7 +630,6 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-
 		/// (daos support. call name: set_min_vote_weight_for_every_call, call id:301)
 		///
 		/// 给daos支持的每一个交易设置公投权限
@@ -664,7 +663,6 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-
 		/// (daos support. call name: set_launch_period, call id:303)
 		///
 		/// 设置公投周期（多久可以发起一个公投）
@@ -680,7 +678,6 @@ pub mod pallet {
 
 			Ok(().into())
 		}
-
 
 		/// (daos support. call name: set_minimum_deposit, call id:304)
 		///
@@ -698,7 +695,6 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-
 		/// (daos support. call name: set_minimum_deposit, call id:305)
 		///
 		/// 设置投票的时长
@@ -714,7 +710,6 @@ pub mod pallet {
 
 			Ok(().into())
 		}
-
 
 		/// (daos support. call name: set_rerserve_period, call id:306)
 		///
