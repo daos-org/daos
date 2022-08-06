@@ -44,11 +44,12 @@ pub use sp_std::{
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub struct DaoInfo<AccountId, BlockNumber, ConcreteId> {
 	creator: AccountId,
 	pub start_block: BlockNumber,
 	id: ConcreteId,
+	describe: Vec<u8>,
 }
 
 #[frame_support::pallet]
@@ -59,6 +60,7 @@ pub mod pallet {
 		weights::GetDispatchInfo,
 	};
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::traits::{CheckedAdd, One};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -82,7 +84,7 @@ pub mod pallet {
 			+ Default
 			+ TryFrom<<Self as pallet::Config>::Call>;
 
-		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen;
+		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen + CheckedAdd + One;
 
 		type ConcreteId: Parameter
 			+ Member
@@ -105,6 +107,10 @@ pub mod pallet {
 	pub type Daos<T: Config> =
 		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn next_dao_id)]
+	pub type NextDaoId<T: Config> = StorageValue<_, T::DaoId, ValueQuery>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -124,6 +130,8 @@ pub mod pallet {
 		NotDaoSupportCall,
 		NotDaoId,
 		HaveNoCallId,
+		DescribeTooLong,
+		Overflow,
 	}
 
 	#[pallet::hooks]
@@ -134,11 +142,14 @@ pub mod pallet {
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn create_dao(
 			origin: OriginFor<T>,
-			dao_id: T::DaoId,
 			concrete_id: T::ConcreteId,
+			describe: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			let creator = ensure_signed(origin)?;
-			ensure!(!Daos::<T>::contains_key(dao_id), Error::<T>::DaoExists);
+
+			ensure!(describe.len() <= 50, Error::<T>::DescribeTooLong);
+
+			let dao_id = NextDaoId::<T>::get();
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
 				concrete_id
@@ -149,8 +160,11 @@ pub mod pallet {
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone() },
+				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone(), describe },
 			);
+			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
+			NextDaoId::<T>::put(next_id);
+
 			Self::deposit_event(Event::CreatedDao(creator, dao_id, concrete_id));
 			Ok(().into())
 		}

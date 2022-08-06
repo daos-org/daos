@@ -1,5 +1,8 @@
+use sp_std::ops::Add;
+use sp_std::ops::Mul;
 use super::*;
 pub use codec::MaxEncodedLen;
+use sp_runtime::traits::{CheckedAdd, One};
 
 #[derive(Decode, Encode, Copy, Clone, Default, Debug, TypeInfo, MaxEncodedLen, Eq, PartialEq)]
 pub struct DaoId(pub u64);
@@ -16,6 +19,38 @@ impl From<u64> for DaoId {
 	}
 }
 
+impl Mul<Self> for DaoId {
+	type Output = DaoId;
+
+	fn mul(self, rhs: Self) -> Self::Output {
+		DaoId(self.0 * rhs.0)
+	}
+}
+
+impl One for DaoId {
+	fn one() -> Self {
+		DaoId(1u64)
+	}
+}
+
+impl Add<Self> for DaoId {
+	type Output = DaoId;
+
+	fn add(self, rhs: Self) -> Self::Output {
+		DaoId(self.0.add(rhs.0))
+	}
+}
+
+impl CheckedAdd for DaoId {
+	 fn checked_add(&self, v: &Self) -> Option<Self> {
+		 if let Some(x) = self.0.checked_add(v.0) {
+			 Some(DaoId(x))
+		 }
+		 else {
+			 None
+		 }
+	 }
+}
 #[derive(Decode, Encode, Copy, Clone, Default, Debug, TypeInfo, MaxEncodedLen, Eq, PartialEq)]
 pub struct Nft<ClassId>(pub ClassId);
 
