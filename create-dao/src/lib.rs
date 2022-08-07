@@ -45,11 +45,24 @@ pub use sp_std::{
 mod benchmarking;
 
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
-pub struct DaoInfo<AccountId, BlockNumber, ConcreteId> {
+pub enum Status {
+	Active,
+	InActive,
+}
+
+impl Default for Status {
+	fn default() -> Self {
+		Status::Active
+	}
+}
+
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
 	creator: AccountId,
 	pub start_block: BlockNumber,
 	id: ConcreteId,
 	describe: Vec<u8>,
+	status: Status,
 }
 
 #[frame_support::pallet]
@@ -105,7 +118,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn daos)]
 	pub type Daos<T: Config> =
-		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>>;
+		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_dao_id)]
@@ -160,7 +173,7 @@ pub mod pallet {
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone(), describe },
+				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone(), describe, status: Status::Active },
 			);
 			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
 			NextDaoId::<T>::put(next_id);
@@ -193,7 +206,7 @@ pub mod pallet {
 
 		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>, DispatchError> {
+		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}
