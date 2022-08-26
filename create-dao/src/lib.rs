@@ -60,7 +60,8 @@ impl Default for Status {
 pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
 	creator: AccountId,
 	pub start_block: BlockNumber,
-	id: ConcreteId,
+	pub concrete_id: ConcreteId,
+	pub dao_account_id: AccountId,
 	describe: Vec<u8>,
 	status: Status,
 }
@@ -166,14 +167,13 @@ pub mod pallet {
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
 				concrete_id
-					.try_create(creator.clone(), dao_id)
-					.map_err(|_| Error::<T>::HaveNoCreatePermission)?;
+					.try_create(creator.clone(), dao_id)?;
 			}
 
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone(), describe, status: Status::Active },
+				DaoInfo { creator: creator.clone(), start_block: now, concrete_id: concrete_id.clone(), describe, status: Status::Active, dao_account_id: concrete_id.clone().into_account() },
 			);
 			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
 			NextDaoId::<T>::put(next_id);
@@ -215,7 +215,12 @@ pub mod pallet {
 			dao_id: <T as pallet::Config>::DaoId,
 		) -> result::Result<T::ConcreteId, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
-			Ok(dao.id)
+			Ok(dao.concrete_id)
+		}
+
+		pub fn try_get_dao_account_id(dao_id: <T as pallet::Config>::DaoId,) -> result::Result<T::AccountId, DispatchError> {
+			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
+			Ok(dao.dao_account_id)
 		}
 
 		pub fn ensrue_dao_root(
