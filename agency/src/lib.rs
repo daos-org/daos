@@ -34,7 +34,7 @@ use frame_support::{
 pub use pallet::*;
 use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{EnsureOriginWithArg, GetCollectiveMembers, GetCollectiveMembersChecked},
+	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
@@ -177,8 +177,6 @@ pub mod pallet {
 		/// Default vote strategy of this collective.
 		type DefaultVote: DefaultVote;
 
-		type GetCollectiveMembers: GetCollectiveMembers<Self::AccountId, Self::DaoId>;
-
 		#[pallet::constant]
 		type MaxMembersForSystem: Get<MemberCount>;
 
@@ -209,9 +207,13 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn collectives)]
+	#[pallet::getter(fn collective_members)]
 	pub type CollectiveMembers<T: Config<I>, I: 'static = ()> =
 		StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn prime)]
+	pub type Prime<T: Config<I>, I: 'static = ()> = StorageMap<_, Identity, <T as dao::Config>::DaoId, T::AccountId>;
 
 	#[pallet::type_value]
 	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> T::BlockNumber {
@@ -367,7 +369,7 @@ pub mod pallet {
 		/// The given length bound for the proposal was too low.
 		WrongProposalLength,
 		BadOrigin,
-		MembersNotExsits,
+		MembersTooLarge,
 		ProportionErr,
 		NotDaoAccount,
 		ThresholdWrong,
@@ -415,11 +417,11 @@ pub mod pallet {
 			);
 
 			ensure!(
-				Self::members(dao_id, &who)?.len() as u32 >= threshold,
+				Self::collective_members(dao_id).len() as u32 >= threshold,
 				Error::<T, I>::ThresholdWrong
 			);
 			if threshold < 2 {
-				let seats = Self::members(dao_id, &who)?.len() as MemberCount;
+				let seats = Self::collective_members(dao_id).len() as MemberCount;
 				let result = proposal.dispatch(RawOrigin::Members(dao_id, 1, seats).into());
 				Self::deposit_event(Event::Executed {
 					proposal_hash,
@@ -527,7 +529,7 @@ pub mod pallet {
 			proposal_hash: T::Hash,
 			#[pallet::compact] index: ProposalIndex,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
+			let _ = ensure_signed(origin)?;
 
 			let voting =
 				Self::voting(dao_id, &proposal_hash).ok_or(Error::<T, I>::ProposalMissing)?;
@@ -535,7 +537,7 @@ pub mod pallet {
 
 			let mut no_votes = voting.nays.len() as MemberCount;
 			let mut yes_votes = voting.ayes.len() as MemberCount;
-			let seats = Self::members(dao_id, &who)?.len() as MemberCount;
+			let seats = Self::collective_members(dao_id).len() as MemberCount;
 			let approved = yes_votes >= voting.threshold;
 			let disapproved = seats.saturating_sub(no_votes) < voting.threshold;
 			// Allow (dis-)approving the proposal as soon as there are enough votes.
@@ -557,7 +559,7 @@ pub mod pallet {
 				Error::<T, I>::TooEarly
 			);
 
-			let prime_vote = T::GetCollectiveMembers::get_prime(dao_id)
+			let prime_vote = Self::prime(dao_id)
 				.map(|who| voting.ayes.iter().any(|a| a == &who));
 
 			// default voting strategy.
@@ -687,25 +689,8 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn is_member(dao_id: T::DaoId, who: &T::AccountId) -> result::Result<bool, DispatchError> {
 		// Note: The dispatchables *do not* use this to check membership so make sure
 		// to update those if this is changed.
-		let members = Self::members(dao_id, &who)?;
+		let members = Self::collective_members(dao_id);
 		Ok(members.contains(&who))
-	}
-
-	pub fn members(
-		dao_id: T::DaoId,
-		who: &T::AccountId,
-	) -> result::Result<Vec<T::AccountId>, DispatchError> {
-		if cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-			return Ok(CollectiveMembers::<T, I>::get(dao_id))
-		} else {
-			let mut members =
-				Self::get_members_sorted(dao_id, &T::GetCollectiveMembers::get_members(dao_id))?;
-			if members.is_empty() {
-				members.push(who.clone());
-				return Ok(members)
-			}
-			Ok(members)
-		}
 	}
 
 	/// Ensure that the right proposal bounds were passed and get the proposal from storage.
@@ -764,17 +749,18 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 }
 
-impl<T: Config<I>, I: 'static> GetCollectiveMembersChecked<T::AccountId, T::DaoId, DispatchError>
+impl<T: Config<I>, I: 'static> SetCollectiveMembers<T::AccountId, T::DaoId, DispatchError>
 	for Pallet<T, I>
 {
-	fn get_members_sorted(
+	fn set_members_sorted(
 		dao_id: T::DaoId,
 		members: &[T::AccountId],
-	) -> Result<Vec<T::AccountId>, DispatchError> {
+		prime: Option<T::AccountId>,
+	) -> Result<(), DispatchError> {
 		if members.len() >
 			MaxMembers::<T, I>::get(dao_id).min(T::MaxMembersForSystem::get()) as usize
 		{
-			return Err(Error::<T, I>::MembersNotExsits)?
+			return Err(Error::<T, I>::MembersTooLarge)?
 		}
 		// remove accounts from all current voting in motions.
 		let mut members = members.to_vec();
@@ -796,7 +782,12 @@ impl<T: Config<I>, I: 'static> GetCollectiveMembersChecked<T::AccountId, T::DaoI
 				}
 			});
 		}
-		Ok(members)
+		if let Some(p) = prime {
+			Prime::<T, I>::insert(dao_id, p);
+		}
+		CollectiveMembers::<T, I>::insert(dao_id, members);
+
+		Ok(())
 	}
 }
 

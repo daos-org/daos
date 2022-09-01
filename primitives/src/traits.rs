@@ -12,16 +12,17 @@ impl From<BadOrigin> for &'static str {
 pub trait BaseCallFilter<Call> {
 	fn contains(&self, call: Call) -> bool;
 }
-pub trait GetCollectiveMembersChecked<
+pub trait SetCollectiveMembers<
 	AccountId: Clone + Ord,
 	DaoId: Clone + Default + Copy,
 	DispathErr,
 >
 {
-	fn get_members_sorted(
+	fn set_members_sorted(
 		dao_id: DaoId,
 		members: &[AccountId],
-	) -> result::Result<Vec<AccountId>, DispathErr>;
+		prime: Option<AccountId>,
+	) -> result::Result<(), DispathErr>;
 }
 
 pub trait GetCollectiveMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
@@ -46,13 +47,14 @@ pub trait TryCreate<AccountId: Clone + Ord, DaoId: Clone, DispatchError> {
 }
 
 impl<AccountId: Clone + Ord, DaoId: Clone + Default + Copy>
-	GetCollectiveMembersChecked<AccountId, DaoId, DispatchError> for ()
+	SetCollectiveMembers<AccountId, DaoId, DispatchError> for ()
 {
-	fn get_members_sorted(
+	fn set_members_sorted(
 		_dao_id: DaoId,
 		_members: &[AccountId],
-	) -> result::Result<Vec<AccountId>, DispatchError> {
-		Ok(Vec::new())
+		_prime: Option<AccountId>,
+	) -> result::Result<(), DispatchError> {
+		Ok(())
 	}
 }
 
