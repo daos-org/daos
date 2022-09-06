@@ -44,9 +44,12 @@ pub use sp_std::{
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
+/// DAO's status.
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub enum Status {
+	/// In use.
 	Active,
+	/// Does not work properly.
 	InActive,
 }
 
@@ -56,13 +59,20 @@ impl Default for Status {
 	}
 }
 
+/// DAO specific information
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
+	/// creator of DAO.
 	creator: AccountId,
+	/// The block that creates the DAO.
 	pub start_block: BlockNumber,
+	/// The id of the specific group mapped by dao.
 	pub concrete_id: ConcreteId,
+	/// DAO account id.
 	pub dao_account_id: AccountId,
+	/// Description of the DAO.
 	describe: Vec<u8>,
+	/// State of the DAO.
 	status: Status,
 }
 
@@ -82,6 +92,7 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		/// All calls supported by DAO.
 		type Call: Parameter
 			+ UnfilteredDispatchable<Origin = Self::Origin>
 			+ GetDispatchInfo
@@ -90,6 +101,7 @@ pub mod pallet {
 			+ IsSubType<Call<Self>>
 			+ IsType<<Self as frame_system::Config>::Call>;
 
+		/// Each Call has its own id.
 		type CallId: Parameter
 			+ Copy
 			+ MaybeSerializeDeserialize
@@ -98,8 +110,10 @@ pub mod pallet {
 			+ Default
 			+ TryFrom<<Self as pallet::Config>::Call>;
 
+		/// Each DAO has its own id.
 		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen + CheckedAdd + One;
 
+		/// The specific group on the chain mapped by DAO.
 		type ConcreteId: Parameter
 			+ Member
 			+ TypeInfo
@@ -116,11 +130,13 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
+	/// All DAOs that have been created.
 	#[pallet::storage]
 	#[pallet::getter(fn daos)]
 	pub type Daos<T: Config> =
 		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>>;
 
+	/// The id of the next dao to be created.
 	#[pallet::storage]
 	#[pallet::getter(fn next_dao_id)]
 	pub type NextDaoId<T: Config> = StorageValue<_, T::DaoId, ValueQuery>;
@@ -128,23 +144,27 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SomethingStored(u32, T::AccountId),
+		/// The new DAO is successfully created.
 		CreatedDao(T::AccountId, T::DaoId, T::ConcreteId),
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Do not have permission to create.
 		HaveNoCreatePermission,
+		/// DAO already exists
 		DaoExists,
+		/// DAO does not exist.
 		DaoNotExists,
-		InVailCallId,
+		/// DAO unsupported call
 		InVailCall,
-		InVailDaoId,
+		/// Wrong origin.
 		BadOrigin,
-		NotDaoSupportCall,
-		NotDaoId,
-		HaveNoCallId,
+		/// Not the id of this dao.
+		DaoIdNotMatch,
+		/// The description of the DAO is too long.
 		DescribeTooLong,
+		/// Numerical calculation overflow error.
 		Overflow,
 	}
 
@@ -153,6 +173,8 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		/// Create a DAO for a specific group
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn create_dao(
 			origin: OriginFor<T>,
@@ -184,7 +206,7 @@ pub mod pallet {
 
 		/// (daos support. call name: dao_remark, call id:101)
 		///
-		/// dao记录某件事
+		/// dao remark something.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn dao_remark(
 			origin: OriginFor<T>,

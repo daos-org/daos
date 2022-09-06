@@ -88,7 +88,7 @@ pub mod pallet {
 			let sudo = Self::get_sudo_account(dao_id, IsMustDemocracy::<T>::get(dao_id))?;
 			ensure!(sudo == who, Error::<T>::NotSudo);
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::NotDaoSupportCall);
+			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 			// let _: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
 			// 	.ok()
 			// 	.ok_or(dao::Error::<T>::HaveNoCallId)?;

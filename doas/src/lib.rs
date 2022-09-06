@@ -101,13 +101,13 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			ensure!(
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
+				dao::Error::<T>::InVailCall
 			);
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| Error::<T>::BadOrigin)?;
-			ensure!(dao_id == id, dao::Error::<T>::NotDaoId);
+			ensure!(dao_id == id, dao::Error::<T>::DaoIdNotMatch);
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
 			let dao_account = concrete_id.into_account();
 			let res =

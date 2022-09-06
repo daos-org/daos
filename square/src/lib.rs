@@ -346,7 +346,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
-				dao::Error::<T>::NotDaoSupportCall
+				dao::Error::<T>::InVailCall
 			);
 			ensure!(value >= MinimumDeposit::<T>::get(dao_id), Error::<T>::ValueLow);
 
