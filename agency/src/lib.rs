@@ -376,8 +376,6 @@ pub mod pallet {
 		WrongProposalWeight,
 		/// The given length bound for the proposal was too low.
 		WrongProposalLength,
-		/// Wrong origin
-		BadOrigin,
 		/// The number of people exceeds the maximum limit
 		MembersTooLarge,
 		/// The proportion is more than 100%
