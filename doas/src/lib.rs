@@ -55,6 +55,7 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		/// Origin must be from collective.
 		type DoAsOrigin: EnsureOriginWithArg<
 			Self::Origin,
 			(Self::DaoId, Self::CallId),
@@ -69,23 +70,13 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SetEnsure(T::DaoId, u32, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
+		/// The collective successfully executes a call based on origin.
 		DoAsDone { sudo_result: DispatchResult },
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		DaoNotExists,
-		NotDaoAccount,
-		CallNotSupport,
-		InVailDaoId,
-		InVailCall,
-		InVailCallId,
-		HaveNoCallId,
-		BadOrigin,
-		ProportionErr,
-		NotDaoId,
 	}
 
 	#[pallet::hooks]
@@ -93,6 +84,8 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		/// The collective execute an external call
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn do_as_collective(
 			origin: OriginFor<T>,
@@ -106,7 +99,7 @@ pub mod pallet {
 			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
-				.map_err(|_| Error::<T>::BadOrigin)?;
+				.map_err(|_| dao::Error::<T>::BadOrigin)?;
 			ensure!(dao_id == id, dao::Error::<T>::DaoIdNotMatch);
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
 			let dao_account = concrete_id.into_account();
