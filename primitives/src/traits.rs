@@ -24,6 +24,10 @@ pub trait AfterCreate<A, B> {
 	fn do_something(a: A, b: B);
 }
 
+impl<A: Clone, B: Clone> AfterCreate<A, B> for () {
+	fn do_something(_a: A, _b: B) {}
+}
+
 pub trait TryCreate<AccountId: Clone + Ord, DaoId: Clone, DispatchError> {
 	fn try_create(&self, who: AccountId, dao_id: DaoId) -> result::Result<(), DispatchError>;
 }
