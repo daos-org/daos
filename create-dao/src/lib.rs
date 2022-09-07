@@ -23,7 +23,7 @@ pub use frame_support::{
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{BaseCallFilter, TryCreate},
+	traits::{AfterCreate, BaseCallFilter, TryCreate},
 	types::RealCallId,
 	AccountIdConversion,
 };
@@ -123,6 +123,9 @@ pub mod pallet {
 			+ AccountIdConversion<Self::AccountId>
 			+ BaseCallFilter<<Self as pallet::Config>::Call>
 			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
+
+		/// Do some things after creating dao, such as setting up a sudo account.
+		type AfterCreate: AfterCreate<Self::AccountId, Self::DaoId>;
 	}
 
 	#[pallet::pallet]
@@ -133,8 +136,12 @@ pub mod pallet {
 	/// All DAOs that have been created.
 	#[pallet::storage]
 	#[pallet::getter(fn daos)]
-	pub type Daos<T: Config> =
-		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>>;
+	pub type Daos<T: Config> = StorageMap<
+		_,
+		Identity,
+		T::DaoId,
+		DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
+	>;
 
 	/// The id of the next dao to be created.
 	#[pallet::storage]
@@ -173,7 +180,6 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// Create a DAO for a specific group
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn create_dao(
@@ -188,17 +194,25 @@ pub mod pallet {
 			let dao_id = NextDaoId::<T>::get();
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				concrete_id
-					.try_create(creator.clone(), dao_id)?;
+				concrete_id.try_create(creator.clone(), dao_id)?;
 			}
 
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, concrete_id: concrete_id.clone(), describe, status: Status::Active, dao_account_id: concrete_id.clone().into_account() },
+				DaoInfo {
+					creator: creator.clone(),
+					start_block: now,
+					concrete_id: concrete_id.clone(),
+					describe,
+					status: Status::Active,
+					dao_account_id: concrete_id.clone().into_account(),
+				},
 			);
 			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
 			NextDaoId::<T>::put(next_id);
+
+			T::AfterCreate::do_something(creator.clone(), dao_id);
 
 			Self::deposit_event(Event::CreatedDao(creator, dao_id, concrete_id));
 			Ok(().into())
@@ -228,7 +242,10 @@ pub mod pallet {
 
 		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>, DispatchError> {
+		) -> result::Result<
+			DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
+			DispatchError,
+		> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}
@@ -240,7 +257,9 @@ pub mod pallet {
 			Ok(dao.concrete_id)
 		}
 
-		pub fn try_get_dao_account_id(dao_id: <T as pallet::Config>::DaoId,) -> result::Result<T::AccountId, DispatchError> {
+		pub fn try_get_dao_account_id(
+			dao_id: <T as pallet::Config>::DaoId,
+		) -> result::Result<T::AccountId, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao.dao_account_id)
 		}

@@ -12,17 +12,16 @@ impl From<BadOrigin> for &'static str {
 pub trait BaseCallFilter<Call> {
 	fn contains(&self, call: Call) -> bool;
 }
-pub trait SetCollectiveMembers<
-	AccountId: Clone + Ord,
-	DaoId: Clone + Default + Copy,
-	DispathErr,
->
-{
+pub trait SetCollectiveMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy, DispathErr> {
 	fn set_members_sorted(
 		dao_id: DaoId,
 		members: &[AccountId],
 		prime: Option<AccountId>,
 	) -> result::Result<(), DispathErr>;
+}
+
+pub trait AfterCreate<A, B> {
+	fn do_something(a: A, b: B);
 }
 
 pub trait TryCreate<AccountId: Clone + Ord, DaoId: Clone, DispatchError> {

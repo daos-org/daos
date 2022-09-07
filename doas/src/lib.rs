@@ -76,15 +76,13 @@ pub mod pallet {
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
-	pub enum Error<T> {
-	}
+	pub enum Error<T> {}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// The collective execute an external call
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn do_as_collective(
@@ -96,7 +94,8 @@ pub mod pallet {
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::InVailCall
 			);
-			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
+			let call_id: T::CallId =
+				TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| dao::Error::<T>::BadOrigin)?;

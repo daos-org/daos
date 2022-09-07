@@ -219,7 +219,8 @@ pub mod pallet {
 	/// The prime of the collective.
 	#[pallet::storage]
 	#[pallet::getter(fn prime)]
-	pub type Prime<T: Config<I>, I: 'static = ()> = StorageMap<_, Identity, <T as dao::Config>::DaoId, T::AccountId>;
+	pub type Prime<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Identity, <T as dao::Config>::DaoId, T::AccountId>;
 
 	#[pallet::type_value]
 	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> T::BlockNumber {
@@ -239,7 +240,6 @@ pub mod pallet {
 
 	/// Maximum number of proposals allowed to be active in parallel.
 	#[pallet::storage]
-
 	#[pallet::getter(fn max_proposals)]
 	pub type MaxProposals<T: Config<I>, I: 'static = ()> =
 		StorageMap<_, Identity, T::DaoId, ProposalIndex, ValueQuery, MaxProposalsOnEmpty<T, I>>;
@@ -308,44 +308,21 @@ pub mod pallet {
 			no: MemberCount,
 		},
 		/// A motion was approved by the required threshold.
-		Approved {
-			proposal_hash: T::Hash,
-		},
+		Approved { proposal_hash: T::Hash },
 		/// A motion was not approved by the required threshold.
-		Disapproved {
-			proposal_hash: T::Hash,
-		},
+		Disapproved { proposal_hash: T::Hash },
 		/// A motion was executed; result will be `Ok` if it returned without error.
-		Executed {
-			proposal_hash: T::Hash,
-			result: DispatchResult,
-		},
+		Executed { proposal_hash: T::Hash, result: DispatchResult },
 		/// A single member did some action; result will be `Ok` if it returned without error.
-		MemberExecuted {
-			proposal_hash: T::Hash,
-			result: DispatchResult,
-		},
+		MemberExecuted { proposal_hash: T::Hash, result: DispatchResult },
 		/// A proposal was closed because its threshold was reached or after its duration was up.
-		Closed {
-			proposal_hash: T::Hash,
-			yes: MemberCount,
-			no: MemberCount,
-		},
+		Closed { proposal_hash: T::Hash, yes: MemberCount, no: MemberCount },
 		/// Set the voting duration for a proposal in each DAO.
-		SetMotionDuration {
-			dao_id: T::DaoId,
-			duration: T::BlockNumber,
-		},
+		SetMotionDuration { dao_id: T::DaoId, duration: T::BlockNumber },
 		/// Set a cap on the number of proposals in each DAO.
-		SetMaxProposals {
-			dao_id: T::DaoId,
-			max: ProposalIndex,
-		},
+		SetMaxProposals { dao_id: T::DaoId, max: ProposalIndex },
 		/// Set the upper limit of the number of council members in each DAO.
-		SetMaxMembers {
-			dao_id: T::DaoId,
-			max: MemberCount,
-		},
+		SetMaxMembers { dao_id: T::DaoId, max: MemberCount },
 		/// Set Origin for a method in DAO.
 		SetOrigin(T::DaoId, T::CallId, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
 	}
@@ -568,8 +545,7 @@ pub mod pallet {
 				Error::<T, I>::TooEarly
 			);
 
-			let prime_vote = Self::prime(dao_id)
-				.map(|who| voting.ayes.iter().any(|a| a == &who));
+			let prime_vote = Self::prime(dao_id).map(|who| voting.ayes.iter().any(|a| a == &who));
 
 			// default voting strategy.
 			let default = T::DefaultVote::default_vote(prime_vote, yes_votes, no_votes, seats);
