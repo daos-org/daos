@@ -133,7 +133,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		fn try_get_sudo_account(dao_id: T::DaoId) -> result::Result<T::AccountId, DispatchError> {
 			Ok(Account::<T>::get(dao_id)
-				.unwrap_or(dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account()))
+				.unwrap_or(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?))
 		}
 	}
 }
