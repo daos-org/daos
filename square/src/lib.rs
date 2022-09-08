@@ -26,16 +26,15 @@ pub use codec::{Decode, Encode};
 use dao::{self, AccountIdConversion, Hash, Vec};
 use frame_support::dispatch::{DispatchResult as DResult, UnfilteredDispatchable};
 pub use frame_support::{
-	traits::{Defensive, Get, Currency, ReservableCurrency},
+	traits::{Currency, Defensive, Get, ReservableCurrency},
 	BoundedVec, RuntimeDebug,
 };
-use sp_runtime::traits::CheckedAdd;
 pub use pallet::*;
 use primitives::constant::weight::DAOS_BASE_WEIGHT;
 use scale_info::TypeInfo;
 pub use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{
-	traits::{BlockNumberProvider, CheckedMul},
+	traits::{BlockNumberProvider, CheckedAdd, CheckedMul},
 	DispatchError,
 };
 use sp_std::boxed::Box;
@@ -66,7 +65,6 @@ pub struct Tally<Balance> {
 	pub nays: Balance,
 }
 
-
 /// vote yes or no
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 pub enum Opinion {
@@ -82,16 +80,22 @@ impl Default for Opinion {
 	}
 }
 
-
 /// Information about individual votes.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 pub struct VoteInfo<DaoId, ConcreteId, Vote, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
+	/// The id of the Dao where the vote is located.
 	dao_id: DaoId,
+	/// The specific group id mapped by Dao.
 	concrete_id: ConcreteId,
+	/// The specific thing that the vote pledged.
 	vote: Vote,
+	/// Object or agree.
 	opinion: Opinion,
+	/// voting weight.
 	vote_weight: VoteWeight,
+	/// Block height that can be unlocked.
 	unlock_block: BlockNumber,
+	/// The referendum id corresponding to the vote.
 	referendum_index: ReferendumIndex,
 }
 
@@ -125,14 +129,14 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	pub type BalanceOf<T> =
-	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
+		/// Collateral for voting in referendum.
 		type Vote: Clone
 			+ Default
 			+ Copy
@@ -146,16 +150,15 @@ pub mod pallet {
 				Self::BlockNumber,
 				DispatchError,
 			>;
-
+		/// The number of times the vote is magnified.
 		type Conviction: Clone
 			+ Default
 			+ Copy
 			+ Parameter
 			+ ConvertInto<Self::BlockNumber>
 			+ ConvertInto<BalanceOf<Self>>;
-
+		/// Operations related to native assets.
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
-
 	}
 
 	#[pallet::pallet]
@@ -163,6 +166,7 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
+	/// Number of public proposals so for.
 	#[pallet::storage]
 	#[pallet::getter(fn public_prop_count)]
 	pub type PublicPropCount<T: Config> = StorageMap<_, Identity, T::DaoId, PropIndex, ValueQuery>;
@@ -171,6 +175,8 @@ pub mod pallet {
 	pub fn MaxPublicPropsOnEmpty() -> PropIndex {
 		100u32
 	}
+
+	/// Maximum number of public proposals at one time.
 	#[pallet::storage]
 	#[pallet::getter(fn max_public_props)]
 	pub type MaxPublicProps<T: Config> =
@@ -180,11 +186,14 @@ pub mod pallet {
 	pub fn LaunchPeriodOnEmpty<T: Config>() -> T::BlockNumber {
 		T::BlockNumber::from(900u32)
 	}
+
+	/// How soon can a referendum be called.
 	#[pallet::storage]
 	#[pallet::getter(fn launch_period)]
 	pub type LaunchPeriod<T: Config> =
 		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, LaunchPeriodOnEmpty<T>>;
 
+	/// Minimum stake per person when making public proposals.
 	#[pallet::storage]
 	#[pallet::getter(fn minimum_deposit)]
 	pub type MinimumDeposit<T: Config> =
@@ -194,6 +203,8 @@ pub mod pallet {
 	pub fn VotingPeriodOnEmpty<T: Config>() -> T::BlockNumber {
 		T::BlockNumber::from(900u32)
 	}
+
+	/// How long each proposal can be voted on.
 	#[pallet::storage]
 	#[pallet::getter(fn voting_period)]
 	pub type VotingPeriod<T: Config> =
@@ -203,6 +214,8 @@ pub mod pallet {
 	pub fn ReservePeriodOnEmpty<T: Config>() -> T::BlockNumber {
 		T::BlockNumber::from(900u32)
 	}
+
+	/// How long does it take to release the mortgage.
 	#[pallet::storage]
 	#[pallet::getter(fn reserve_period)]
 	pub type ReservePeriod<T: Config> =
@@ -212,6 +225,8 @@ pub mod pallet {
 	pub fn EnactmentPeriodOnEmpty<T: Config>() -> T::BlockNumber {
 		T::BlockNumber::from(900u32)
 	}
+
+	/// How soon after voting closes the proposal can be implemented.
 	#[pallet::storage]
 	#[pallet::getter(fn enactment_period)]
 	pub type EnactmentPeriod<T: Config> =
@@ -242,11 +257,13 @@ pub mod pallet {
 		(Vec<T::AccountId>, BalanceOf<T>),
 	>;
 
+	/// Amount of proposal locked.
 	#[pallet::storage]
 	#[pallet::getter(fn reserve_of)]
 	pub type ReserveOf<T: Config> =
 		StorageMap<_, Identity, T::AccountId, Vec<(BalanceOf<T>, T::BlockNumber)>, ValueQuery>;
 
+	/// Referendum specific information.
 	#[pallet::storage]
 	#[pallet::getter(fn referendum_info)]
 	pub type ReferendumInfoOf<T: Config> = StorageDoubleMap<
@@ -258,11 +275,13 @@ pub mod pallet {
 		ReferendumInfo<T::BlockNumber, <T as dao::Config>::Call, BalanceOf<T>>,
 	>;
 
+	/// Number of referendums so far.
 	#[pallet::storage]
 	#[pallet::getter(fn referendum_count)]
 	pub type ReferendumCount<T: Config> =
 		StorageMap<_, Identity, T::DaoId, ReferendumIndex, ValueQuery>;
 
+	/// Everyone's voting information.
 	#[pallet::storage]
 	#[pallet::getter(fn votes_of)]
 	pub type VotesOf<T: Config> = StorageMap<
@@ -283,11 +302,13 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// Minimum voting weight required for each external transaction.
 	#[pallet::storage]
 	#[pallet::getter(fn min_vote_weight_of)]
 	pub type MinVoteWeightOf<T: Config> =
 		StorageDoubleMap<_, Identity, T::DaoId, Identity, T::CallId, BalanceOf<T>, ValueQuery>;
 
+	/// When the referendum was last launched.
 	#[pallet::storage]
 	#[pallet::getter(fn launch_tag)]
 	pub type LaunchTag<T: Config> = StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery>;
@@ -316,7 +337,7 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		Overflow,
-		ValueLow,
+		DepositTooLow,
 		TooManyProposals,
 		ProposalMissing,
 		NoneWaiting,
@@ -338,6 +359,8 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		/// initiate a proposal.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn propose(
 			origin: OriginFor<T>,
@@ -350,7 +373,7 @@ pub mod pallet {
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*proposal.clone()),
 				dao::Error::<T>::InVailCall
 			);
-			ensure!(value >= MinimumDeposit::<T>::get(dao_id), Error::<T>::ValueLow);
+			ensure!(value >= MinimumDeposit::<T>::get(dao_id), Error::<T>::DepositTooLow);
 
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			let index = Self::public_prop_count(dao_id);
@@ -369,6 +392,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Others support initiating proposals.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn second(
 			origin: OriginFor<T>,
@@ -391,6 +415,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Open a referendum.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn start_table(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
@@ -409,6 +434,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Vote for the referendum
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn vote(
 			origin: OriginFor<T>,
@@ -469,6 +495,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Cancel a vote on a referendum
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn cancel_vote(
 			origin: OriginFor<T>,
@@ -522,6 +549,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Vote and execute the transaction corresponding to the proposa
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn enact_proposal(
 			origin: OriginFor<T>,
@@ -585,56 +613,57 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// Unlock
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn unlock(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let now = Self::now();
-			let mut votes = VotesOf::<T>::get(&who);
-			ensure!(votes.len() > 0, Error::<T>::VoteNotExists);
-			votes.retain(|h| {
-				if h.unlock_block > now {
-					true
-				} else {
-					if h.vote.vote_end_do(&who, &h.dao_id).is_err() {
+			//
+			{
+				let mut total = BalanceOf::<T>::from(0u32);
+				let mut reserve_info = ReserveOf::<T>::get(&who);
+				reserve_info.retain(|h| {
+					if h.1 > now {
 						true
 					} else {
-						Self::deposit_event(Event::<T>::Unlock(
-							who.clone(),
-							h.concrete_id.clone(),
-							h.vote,
-						));
+						T::Currency::unreserve(&who, h.0);
+						total += h.0;
 						false
 					}
-				}
-			});
-			VotesOf::<T>::insert(&who, votes);
-			Ok(().into())
-		}
+				});
+				ReserveOf::<T>::insert(&who, reserve_info);
+				Self::deposit_event(Event::<T>::Unreserved(who.clone(), total));
+			}
 
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn unreserve(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let mut total = BalanceOf::<T>::from(0u32);
-			let now = Self::now();
-			let mut reserve_info = ReserveOf::<T>::get(&who);
-			reserve_info.retain(|h| {
-				if h.1 > now {
-					true
-				} else {
-					T::Currency::unreserve(&who, h.0);
-					total += h.0;
-					false
-				}
-			});
-			ReserveOf::<T>::insert(&who, reserve_info);
-			Self::deposit_event(Event::<T>::Unreserved(who, total));
+			//
+			{
+				let mut votes = VotesOf::<T>::get(&who);
+				votes.retain(|h| {
+					if h.unlock_block > now {
+						true
+					} else {
+						if h.vote.vote_end_do(&who, &h.dao_id).is_err() {
+							true
+						} else {
+							Self::deposit_event(Event::<T>::Unlock(
+								who.clone(),
+								h.concrete_id.clone(),
+								h.vote,
+							));
+							false
+						}
+					}
+				});
+				VotesOf::<T>::insert(&who, votes);
+			}
 
 			Ok(().into())
 		}
 
 		/// (daos support. call name: set_min_vote_weight_for_every_call, call id:301)
 		///
-		/// 给daos支持的每一个交易设置公投权限
+		/// Set Origin for each Call.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_min_vote_weight_for_every_call(
 			origin: OriginFor<T>,
@@ -651,7 +680,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_max_public_props, call id:302)
 		///
-		/// 设置公投数目上限
+		/// Set the maximum number of proposals at the same time
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_public_props(
 			origin: OriginFor<T>,
@@ -667,7 +696,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_launch_period, call id:303)
 		///
-		/// 设置公投周期（多久可以发起一个公投）
+		/// Set the referendum interval
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_launch_period(
 			origin: OriginFor<T>,
@@ -683,7 +712,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_minimum_deposit, call id:304)
 		///
-		/// 设置提公投需要抵押的最小金额
+		/// Set the minimum amount a proposal needs to stake
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_minimum_deposit(
 			origin: OriginFor<T>,
@@ -699,7 +728,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_minimum_deposit, call id:305)
 		///
-		/// 设置投票的时长
+		/// Set the voting length of the referendum
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_voting_period(
 			origin: OriginFor<T>,
@@ -715,7 +744,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_rerserve_period, call id:306)
 		///
-		/// 设置提公投时候抵押的金额多久能够解抵押
+		/// Set the length of time that can be unreserved
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_rerserve_period(
 			origin: OriginFor<T>,
@@ -731,7 +760,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_enactment_period, call id:307)
 		///
-		/// 设置提案延迟执行的时间
+		/// Set the time to delay the execution of the proposal
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_enactment_period(
 			origin: OriginFor<T>,
