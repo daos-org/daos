@@ -26,12 +26,10 @@ pub use codec::{Decode, Encode};
 use dao::{self, AccountIdConversion, Hash, Vec};
 use frame_support::dispatch::{DispatchResult as DResult, UnfilteredDispatchable};
 pub use frame_support::{
-	traits::{Defensive, Get},
+	traits::{Defensive, Get, Currency, ReservableCurrency},
 	BoundedVec, RuntimeDebug,
 };
-use orml_traits::{
-	arithmetic::CheckedAdd, MultiCurrency, MultiCurrencyExtended, MultiReservableCurrency,
-};
+use sp_runtime::traits::CheckedAdd;
 pub use pallet::*;
 use primitives::constant::weight::DAOS_BASE_WEIGHT;
 use scale_info::TypeInfo;
@@ -59,6 +57,7 @@ mod benchmarking;
 
 pub mod traits;
 
+/// Voting Statistics.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 pub struct Tally<Balance> {
 	/// The number of aye votes, expressed in terms of post-conviction lock-vote.
@@ -67,23 +66,30 @@ pub struct Tally<Balance> {
 	pub nays: Balance,
 }
 
+
+/// vote yes or no
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-pub enum Attitude {
+pub enum Opinion {
+	/// Agree.
 	AYES,
+	/// Reject.
 	NAYS,
 }
 
-impl Default for Attitude {
+impl Default for Opinion {
 	fn default() -> Self {
 		Self::AYES
 	}
 }
 
+
+/// Information about individual votes.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-pub struct VoteInfo<ConcreteId, Vote, BlockNumber, VoteWeight, Attitude, ReferendumIndex> {
+pub struct VoteInfo<DaoId, ConcreteId, Vote, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
+	dao_id: DaoId,
 	concrete_id: ConcreteId,
 	vote: Vote,
-	attitude: Attitude,
+	opinion: Opinion,
 	vote_weight: VoteWeight,
 	unlock_block: BlockNumber,
 	referendum_index: ReferendumIndex,
@@ -118,9 +124,8 @@ pub mod pallet {
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
-	pub(crate) type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<
-		<T as frame_system::Config>::AccountId,
-	>>::Balance;
+	pub type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -136,11 +141,11 @@ pub mod pallet {
 			+ Vote<
 				BalanceOf<Self>,
 				Self::AccountId,
-				Self::ConcreteId,
+				Self::DaoId,
 				Self::Conviction,
 				Self::BlockNumber,
 				DispatchError,
-			> + CheckedVote<Self::ConcreteId, DispatchError>;
+			>;
 
 		type Conviction: Clone
 			+ Default
@@ -149,12 +154,8 @@ pub mod pallet {
 			+ ConvertInto<Self::BlockNumber>
 			+ ConvertInto<BalanceOf<Self>>;
 
-		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = AssetId>
-			+ MultiReservableCurrency<Self::AccountId>
-			+ MultiCurrencyExtended<Self::AccountId>;
+		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
-		#[pallet::constant]
-		type GetNativeCurrencyId: Get<AssetId>;
 	}
 
 	#[pallet::pallet]
@@ -270,11 +271,12 @@ pub mod pallet {
 		T::AccountId,
 		Vec<
 			VoteInfo<
+				T::DaoId,
 				T::ConcreteId,
 				T::Vote,
 				T::BlockNumber,
 				BalanceOf<T>,
-				Attitude,
+				Opinion,
 				ReferendumIndex,
 			>,
 		>,
@@ -356,7 +358,7 @@ pub mod pallet {
 			let max_proposals = MaxPublicProps::<T>::get(dao_id);
 			ensure!(real_prop_count < max_proposals, Error::<T>::TooManyProposals);
 
-			T::MultiCurrency::reserve(T::GetNativeCurrencyId::get(), &who, value)?;
+			T::Currency::reserve(&who, value)?;
 
 			PublicPropCount::<T>::insert(dao_id, index + 1);
 			<DepositOf<T>>::insert(dao_id, index, (&[&who][..], value));
@@ -377,7 +379,7 @@ pub mod pallet {
 			let mut deposit =
 				Self::deposit_of(dao_id, proposal).ok_or(Error::<T>::ProposalMissing)?;
 			let deposit_amount = deposit.1.clone();
-			T::MultiCurrency::reserve(T::GetNativeCurrencyId::get(), &who, deposit_amount)?;
+			T::Currency::reserve(&who, deposit_amount)?;
 			deposit.0.push(who.clone());
 			<DepositOf<T>>::insert(dao_id, proposal, deposit);
 			let unreserved_block = Self::now()
@@ -414,7 +416,7 @@ pub mod pallet {
 			index: ReferendumIndex,
 			vote: T::Vote,
 			conviction: T::Conviction,
-			attitude: Attitude,
+			opinion: Opinion,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let now = Self::now();
@@ -428,24 +430,25 @@ pub mod pallet {
 					if let ReferendumInfo::Ongoing(ref mut x) = info {
 						if x.end > now {
 							let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-							ensure!(vote.is_can_vote(concrete_id.clone())?, Error::<T>::VoteError);
-							let vote_result = vote.try_vote(&who, &concrete_id, &conviction)?;
+							// ensure!(vote.is_can_vote(concrete_id.clone())?, Error::<T>::VoteError);
+							let vote_result = vote.try_vote(&who, &dao_id, &conviction)?;
 							vote_weight = vote_result.0;
 							let duration = vote_result.1;
-							match attitude {
-								Attitude::NAYS => {
+							match opinion {
+								Opinion::NAYS => {
 									x.tally.nays += vote_weight;
 								},
-								Attitude::AYES => {
+								Opinion::AYES => {
 									x.tally.ayes += vote_weight;
 								},
 							};
 							VotesOf::<T>::append(
 								&who,
 								VoteInfo {
+									dao_id,
 									concrete_id,
 									vote,
-									attitude,
+									opinion,
 									vote_weight,
 									unlock_block: now + duration,
 									referendum_index: index,
@@ -484,11 +487,11 @@ pub mod pallet {
 							let mut votes = VotesOf::<T>::get(&who);
 							votes.retain(|h| {
 								if h.referendum_index == index {
-									if h.vote.vote_end_do(&who, &h.concrete_id).is_err() {
+									if h.vote.vote_end_do(&who, &dao_id).is_err() {
 										true
 									} else {
-										match h.attitude {
-											Attitude::NAYS => {
+										match h.opinion {
+											Opinion::NAYS => {
 												x.tally.nays =
 													x.tally.nays.saturating_sub(h.vote_weight);
 											},
@@ -592,7 +595,7 @@ pub mod pallet {
 				if h.unlock_block > now {
 					true
 				} else {
-					if h.vote.vote_end_do(&who, &h.concrete_id).is_err() {
+					if h.vote.vote_end_do(&who, &h.dao_id).is_err() {
 						true
 					} else {
 						Self::deposit_event(Event::<T>::Unlock(
@@ -618,7 +621,7 @@ pub mod pallet {
 				if h.1 > now {
 					true
 				} else {
-					T::MultiCurrency::unreserve(T::GetNativeCurrencyId::get(), &who, h.0);
+					T::Currency::unreserve(&who, h.0);
 					total += h.0;
 					false
 				}
