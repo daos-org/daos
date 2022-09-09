@@ -79,7 +79,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// root to perform external transactions.
+		/// Execute external transactions as root
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn sudo(
 			origin: OriginFor<T>,
