@@ -316,41 +316,66 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// initiate a proposal.
 		Proposed(T::DaoId, T::Hash),
+		/// Others support initiating proposals.
 		Second(T::DaoId, BalanceOf<T>),
+		/// Open a referendum.
 		StartTable(T::DaoId, ReferendumIndex),
+		/// Vote for the referendum.
 		Vote(T::DaoId, ReferendumIndex, T::Vote),
+		/// Cancel a vote on a referendum.
 		CancelVote(T::DaoId, ReferendumIndex),
+		/// Vote and execute the transaction corresponding to the proposa.
 		EnactProposal { dao_id: T::DaoId, index: ReferendumIndex, result: DResult },
+		/// Unlock
 		Unlock(T::AccountId, T::ConcreteId, T::Vote),
+		/// Unlock
 		Unreserved(T::AccountId, BalanceOf<T>),
+		/// Set Origin for each Call.
 		SetMinVoteWeight(T::DaoId, T::CallId, BalanceOf<T>),
+		/// Set the maximum number of proposals at the same time.
 		SetMaxPublicProps { dao_id: T::DaoId, max: u32 },
+		/// Set the referendum interval.
 		SetLaunchPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		/// Set the minimum amount a proposal needs to stake.
 		SetMinimumDeposit { dao_id: T::DaoId, min: BalanceOf<T> },
+		/// Set the voting length of the referendum.
 		SetVotingPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		/// Set the length of time that can be unreserved.
 		SetReservePeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		/// Set the time to delay the execution of the proposal.
 		SetEnactmentPeriod { dao_id: T::DaoId, period: T::BlockNumber },
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Integer computation overflow.
 		Overflow,
+		/// Insufficient amount of deposit.
 		DepositTooLow,
+		/// Maximum number of proposals reached.
 		TooManyProposals,
+		/// Proposal does not exist.
 		ProposalMissing,
+		/// There are no proposals in progress.
 		NoneWaiting,
+		/// Referendum does not exist.
 		ReferendumNotExists,
+		/// Referendum ends.
 		ReferendumFinished,
+		/// Referendum voting is underway.
 		VoteNotEnd,
+		/// Delayed execution time.
 		InDelayTime,
+		/// Referendum voting has ended.
 		VoteEnd,
+		/// Voting closed but proposal rejected.
 		VoteEndButNotPass,
-		VoteNotExists,
+		/// It's not time to open a new referendum.
 		NotTableTime,
-		VoteError,
-		VoteNotEnough,
+		/// Bad origin.
 		VoteWeightTooLow,
 	}
 
@@ -417,7 +442,7 @@ pub mod pallet {
 
 		/// Open a referendum.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn start_table(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
+		pub fn open_table(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let tag = LaunchTag::<T>::get(dao_id);
 			let now = Self::now();
@@ -436,7 +461,7 @@ pub mod pallet {
 
 		/// Vote for the referendum
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn vote(
+		pub fn vote_for_referendum(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			index: ReferendumIndex,
@@ -456,7 +481,6 @@ pub mod pallet {
 					if let ReferendumInfo::Ongoing(ref mut x) = info {
 						if x.end > now {
 							let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-							// ensure!(vote.is_can_vote(concrete_id.clone())?, Error::<T>::VoteError);
 							let vote_result = vote.try_vote(&who, &dao_id, &conviction)?;
 							vote_weight = vote_result.0;
 							let duration = vote_result.1;
