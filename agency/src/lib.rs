@@ -586,7 +586,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_motion_duration, call id:202)
 		///
-		/// Set the length of time for voting on proposals.
+		/// Set the length of time for voting on proposal.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
@@ -601,7 +601,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_max_proposals, call id:203)
 		///
-		/// Set a cap on the number of parliamentary proposals
+		/// Set a cap on the number of agency proposals
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_proposals(
 			origin: OriginFor<T>,
@@ -616,7 +616,7 @@ pub mod pallet {
 
 		/// (daos support. call name: set_max_members, call id:204)
 		///
-		/// Set a cap on the number of parliamentarians.
+		/// Set the maximum number of members in the agency.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_members(
 			origin: OriginFor<T>,

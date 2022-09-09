@@ -83,9 +83,9 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// The collective execute an external call
+		/// The agency execute an external call
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn do_as_collective(
+		pub fn do_as_agency(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			call: Box<<T as dao::Config>::Call>,
