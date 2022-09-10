@@ -82,13 +82,13 @@ impl Default for Opinion {
 
 /// Information about individual votes.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
-pub struct VoteInfo<DaoId, ConcreteId, Vote, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
+pub struct VoteInfo<DaoId, ConcreteId, Pledge, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
 	/// The id of the Dao where the vote is located.
 	dao_id: DaoId,
 	/// The specific group id mapped by Dao.
 	concrete_id: ConcreteId,
 	/// The specific thing that the vote pledged.
-	vote: Vote,
+	pledge: Pledge,
 	/// Object or agree.
 	opinion: Opinion,
 	/// voting weight.
@@ -136,13 +136,13 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		/// Collateral for voting in referendum.
-		type Vote: Clone
+		/// What to stake when voting in a referendum.
+		type Pledge: Clone
 			+ Default
 			+ Copy
 			+ Parameter
 			+ Member
-			+ Vote<
+			+ Pledge<
 				BalanceOf<Self>,
 				Self::AccountId,
 				Self::DaoId,
@@ -292,7 +292,7 @@ pub mod pallet {
 			VoteInfo<
 				T::DaoId,
 				T::ConcreteId,
-				T::Vote,
+				T::Pledge,
 				T::BlockNumber,
 				BalanceOf<T>,
 				Opinion,
@@ -323,13 +323,13 @@ pub mod pallet {
 		/// Open a referendum.
 		StartTable(T::DaoId, ReferendumIndex),
 		/// Vote for the referendum.
-		Vote(T::DaoId, ReferendumIndex, T::Vote),
+		Vote(T::DaoId, ReferendumIndex, T::Pledge),
 		/// Cancel a vote on a referendum.
 		CancelVote(T::DaoId, ReferendumIndex),
 		/// Vote and execute the transaction corresponding to the proposa.
 		EnactProposal { dao_id: T::DaoId, index: ReferendumIndex, result: DResult },
 		/// Unlock
-		Unlock(T::AccountId, T::ConcreteId, T::Vote),
+		Unlock(T::AccountId, T::ConcreteId, T::Pledge),
 		/// Unlock
 		Unreserved(T::AccountId, BalanceOf<T>),
 		/// Set Origin for each Call.
@@ -377,6 +377,8 @@ pub mod pallet {
 		NotTableTime,
 		/// Bad origin.
 		VoteWeightTooLow,
+		///
+		PledgeNotEnough,
 	}
 
 	#[pallet::hooks]
@@ -465,7 +467,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			index: ReferendumIndex,
-			vote: T::Vote,
+			pledge: T::Pledge,
 			conviction: T::Conviction,
 			opinion: Opinion,
 		) -> DispatchResultWithPostInfo {
@@ -481,7 +483,7 @@ pub mod pallet {
 					if let ReferendumInfo::Ongoing(ref mut x) = info {
 						if x.end > now {
 							let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-							let vote_result = vote.try_vote(&who, &dao_id, &conviction)?;
+							let vote_result = pledge.try_vote(&who, &dao_id, &conviction)?;
 							vote_weight = vote_result.0;
 							let duration = vote_result.1;
 							match opinion {
@@ -497,7 +499,7 @@ pub mod pallet {
 								VoteInfo {
 									dao_id,
 									concrete_id,
-									vote,
+									pledge,
 									opinion,
 									vote_weight,
 									unlock_block: now + duration,
@@ -515,7 +517,7 @@ pub mod pallet {
 				},
 			)?;
 
-			Self::deposit_event(Event::<T>::Vote(dao_id, index, vote));
+			Self::deposit_event(Event::<T>::Vote(dao_id, index, pledge));
 			Ok(().into())
 		}
 
@@ -538,7 +540,7 @@ pub mod pallet {
 							let mut votes = VotesOf::<T>::get(&who);
 							votes.retain(|h| {
 								if h.referendum_index == index {
-									if h.vote.vote_end_do(&who, &dao_id).is_err() {
+									if h.pledge.vote_end_do(&who, &dao_id).is_err() {
 										true
 									} else {
 										match h.opinion {
@@ -667,13 +669,13 @@ pub mod pallet {
 					if h.unlock_block > now {
 						true
 					} else {
-						if h.vote.vote_end_do(&who, &h.dao_id).is_err() {
+						if h.pledge.vote_end_do(&who, &h.dao_id).is_err() {
 							true
 						} else {
 							Self::deposit_event(Event::<T>::Unlock(
 								who.clone(),
 								h.concrete_id.clone(),
-								h.vote,
+								h.pledge,
 							));
 							false
 						}
