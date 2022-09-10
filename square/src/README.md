@@ -1,7 +1,13 @@
 # ***Square Module***
 ***
 ## Overview
-
+The square module is about referendums,
+where everyone has the right to vote and they can execute all transactions supported in all DAOs.
+This is the highest authority.
+In other words,
+all transactions that the agency can execute,
+the square module can execute.
+In this module, the minimum voting weight required for each external transaction referendum can be determined, which is also equivalent to Square Origin.
 ***
 ## All Calls
 ***
