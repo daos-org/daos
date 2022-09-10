@@ -386,7 +386,6 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// initiate a proposal.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn propose(
@@ -638,7 +637,6 @@ pub mod pallet {
 
 			Ok(().into())
 		}
-
 
 		/// Unlock
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
