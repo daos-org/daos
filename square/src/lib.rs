@@ -685,7 +685,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_min_vote_weight_for_every_call, call id:301)
+		/// call id:301
 		///
 		/// Set Origin for each Call.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -702,7 +702,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_max_public_props, call id:302)
+		/// call id:302
 		///
 		/// Set the maximum number of proposals at the same time
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -718,7 +718,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_launch_period, call id:303)
+		/// call id:303
 		///
 		/// Set the referendum interval
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -734,7 +734,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_minimum_deposit, call id:304)
+		/// call id:304
 		///
 		/// Set the minimum amount a proposal needs to stake
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -750,7 +750,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_minimum_deposit, call id:305)
+		/// call id:305
 		///
 		/// Set the voting length of the referendum
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -766,7 +766,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_rerserve_period, call id:306)
+		/// call id:306
 		///
 		/// Set the length of time that can be unreserved
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -782,7 +782,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_enactment_period, call id:307)
+		/// call id:307
 		///
 		/// Set the time to delay the execution of the proposal
 		#[pallet::weight(DAOS_BASE_WEIGHT)]

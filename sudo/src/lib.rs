@@ -102,6 +102,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id: 401
+		///
 		/// Set root account or reopen sudo.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_sudo_account(
@@ -117,6 +119,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id: 402
+		///
 		/// delete root account.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn close_sudo(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {

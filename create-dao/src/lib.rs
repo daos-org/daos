@@ -218,7 +218,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: dao_remark, call id:101)
+		/// call id:101
 		///
 		/// dao remark something.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]

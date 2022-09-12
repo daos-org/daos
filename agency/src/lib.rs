@@ -570,7 +570,7 @@ pub mod pallet {
 			}
 		}
 
-		/// (daos support. call name: disapprove_proposal, call id:201)
+		/// call id:201
 		///
 		/// Disapprove a proposal, close, and remove it from the system, regardless of its current state.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -584,7 +584,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_motion_duration, call id:202)
+		/// call id:202
 		///
 		/// Set the length of time for voting on proposal.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -599,7 +599,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_max_proposals, call id:203)
+		/// call id:203
 		///
 		/// Set a cap on the number of agency proposals
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -614,7 +614,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_max_members, call id:204)
+		/// call id:204
 		///
 		/// Set the maximum number of members in the agency.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
@@ -629,7 +629,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		/// (daos support. call name: set_ensure_origin_for_every_call, call id:205)
+		/// call id:205
 		///
 		/// Set origin for a specific call.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
