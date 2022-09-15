@@ -25,9 +25,9 @@ primitives = { path = "../primitives", package = "daos-primitives", default-feat
 
 [dev-dependencies]
 serde      = { version = "1.0.101" }
-sp-core    = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+sp-core    = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
+sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
+sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
 
 [features]
 default = ['std']
@@ -42,7 +42,7 @@ std = [
 ]
 
 runtime-benchmarks = [
-	"frame-benchmarking",
+	"frame-benchmarking/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
 ]

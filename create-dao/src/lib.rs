@@ -41,7 +41,6 @@ pub use sp_std::{
 // #[cfg(test)]
 // mod tests;
 
-#[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 /// DAO's status.

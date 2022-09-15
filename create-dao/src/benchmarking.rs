@@ -1,3 +1,5 @@
+#![cfg(feature = "runtime-benchmarks")]
+
 use super::*;
 use crate::{Config, Pallet as Dao};
 use frame_benchmarking::{
@@ -26,9 +28,9 @@ fn creat_dao<T: Config>() -> (T::DaoId, T::SecondId) {
 benchmarks! {
 	create_dao {
 		let alice = get_alice::<T>();
-		let dao_id = T::DaoId::default();
+		// let dao_id = T::DaoId::default();
 		let second_id = Default::default();
-	}:_(SystemOrigin::Signed(alice), dao_id, second_id)
+	}:_(SystemOrigin::Signed(alice), second_id)
 	verify {
 		assert!(Dao::<T>::daos(dao_id).is_some());
 	}
