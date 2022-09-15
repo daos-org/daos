@@ -41,6 +41,7 @@ pub use sp_std::{
 // #[cfg(test)]
 // mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 /// DAO's status.
@@ -118,6 +119,7 @@ pub mod pallet {
 			+ TypeInfo
 			+ MaxEncodedLen
 			+ Clone
+			+ Copy
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
 			+ BaseCallFilter<<Self as pallet::Config>::Call>
