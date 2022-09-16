@@ -591,7 +591,7 @@ pub mod pallet {
 					if x.end > now {
 						return Err(Error::<T>::VoteNotEnd)?
 					} else {
-						if x.end.saturating_add(x.delay) < now {
+						if x.end.saturating_add(x.delay) > now {
 							return Err(Error::<T>::InDelayTime)?
 						} else {
 							let call_id: T::CallId =
