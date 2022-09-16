@@ -13,17 +13,17 @@ fn get_alice<T: Config<I>, I: 'static>() -> T::AccountId {
 	account("alice", 1, 1)
 }
 
-fn get_dao_account<T: Config<I>, I: 'static>(second_id: T::SecondId) -> T::AccountId {
+fn get_dao_account<T: Config<I>, I: 'static>(second_id: T::ConcreteId) -> T::AccountId {
 	second_id.into_account()
 }
 
-fn create_dao<T: Config<I>, I: 'static>() -> (T::DaoId, T::SecondId) {
-	let second_id = T::SecondId::default();
+fn create_dao<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId) {
+	let second_id = T::ConcreteId::default();
 	let dao_id = T::DaoId::default();
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(get_alice::<T, I>()).into(),
-		dao_id,
-		second_id.clone()
+		second_id,
+		vec![1;4],
 	)
 	.is_ok());
 	CollectiveMembers::<T, I>::insert(
@@ -38,13 +38,8 @@ fn get_proposal<T: Config<I>, I: 'static>(dao_id: T::DaoId) -> (T::Proposal, T::
 	(proposal.clone(), T::Hashing::hash_of(&proposal))
 }
 
-fn get_call<T: Config<I>, I: 'static>(dao_id: T::DaoId) -> (<T as dao::Config>::Call, T::Hash) {
-	let proposal: <T as dao::Config>::Call =
-		DaoCall::<T>::dao_remark { dao_id, remark: vec![1; 20] }.into();
-	(proposal.clone(), T::Hashing::hash_of(&proposal))
-}
 
-fn create_proposal<T: Config<I>, I: 'static>() -> (T::DaoId, T::SecondId, T::Hash, ProposalIndex) {
+fn create_proposal<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId, T::Hash, ProposalIndex) {
 	let (dao_id, second_id) = create_dao::<T, I>();
 	let (proposal, proposal_hash) = get_proposal::<T, I>(dao_id);
 	assert!(Collective::<T, I>::propose(
@@ -57,7 +52,7 @@ fn create_proposal<T: Config<I>, I: 'static>() -> (T::DaoId, T::SecondId, T::Has
 	(dao_id, second_id, proposal_hash, 0 as ProposalIndex)
 }
 
-fn user_vote<T: Config<I>, I: 'static>() -> (T::DaoId, T::SecondId, T::Hash, ProposalIndex) {
+fn user_vote<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId, T::Hash, ProposalIndex) {
 	let (dao_id, second_id, proposal_hash, index) = create_proposal::<T, I>();
 	let dao_account = get_dao_account::<T, I>(second_id.clone());
 	assert!(Collective::<T, I>::vote(
@@ -116,9 +111,8 @@ benchmarks_instance_pallet! {
 		let dao_account = get_dao_account::<T, I>(second_id);
 	}:_(SystemOrigin::Signed(dao_account), dao_id, 20 as MemberCount)
 
-	set_ensure_for_every_call {
+	set_ensure_origin_for_every_call {
 		let (dao_id, second_id) = create_dao::<T, I>();
 		let dao_account = get_dao_account::<T, I>(second_id);
-		let (call, _) = get_call::<T, I>(dao_id);
-	}:_(SystemOrigin::Signed(dao_account), dao_id, Box::new(call), DoAsEnsure::Member)
+	}:_(SystemOrigin::Signed(dao_account), dao_id, T::CallId::default(), DoAsEnsureOrigin::Member)
 }
