@@ -138,4 +138,38 @@ benchmarks! {
 		let account = enact::<T>();
 	}:_(SystemOrigin::Signed(account))
 
+	set_min_vote_weight_for_every_call {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::CallId::default(), BalanceOf::<T>::from(0u32))
+
+	set_max_public_props {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, 100u32)
+
+	set_launch_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_minimum_deposit {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, BalanceOf::<T>::from(0u32))
+
+	set_voting_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_rerserve_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_enactment_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
 }
