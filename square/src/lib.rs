@@ -23,7 +23,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::{Decode, Encode};
-use dao::{self, AccountIdConversion, Hash, Vec};
+use dao::{self, Hash, Vec};
 use frame_support::dispatch::{DispatchResult as DResult, UnfilteredDispatchable};
 pub use frame_support::{
 	traits::{Currency, Defensive, Get, ReservableCurrency},
@@ -605,8 +605,7 @@ pub mod pallet {
 									approved = true;
 									let res = x.proposal.dispatch_bypass_filter(
 										frame_system::RawOrigin::Signed(
-											dao::Pallet::<T>::try_get_concrete_id(dao_id)?
-												.into_account(),
+											dao::Pallet::<T>::try_get_dao_account_id(dao_id)?,
 										)
 										.into(),
 									);

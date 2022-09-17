@@ -270,8 +270,8 @@ pub mod pallet {
 			dao_id: T::DaoId,
 		) -> Result<T::AccountId, DispatchError> {
 			let who = ensure_signed(o)?;
-			let concrete_id = Self::try_get_concrete_id(dao_id)?;
-			ensure!(who == concrete_id.into_account(), Error::<T>::BadOrigin);
+			let dao_id = Self::try_get_dao_account_id(dao_id)?;
+			ensure!(who == dao_id, Error::<T>::BadOrigin);
 			Ok(who)
 		}
 	}
