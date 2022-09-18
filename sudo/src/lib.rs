@@ -37,7 +37,6 @@ pub mod pallet {
 	use crate::Event::{CloseSudo, SetSudo, SudoDone};
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
-	use primitives::AccountIdConversion;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -93,7 +92,7 @@ pub mod pallet {
 			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 
 			let res = call.dispatch_bypass_filter(
-				frame_system::RawOrigin::Signed(concrete_id.into_account()).into(),
+				frame_system::RawOrigin::Signed(sudo.clone()).into(),
 			);
 			Self::deposit_event(SudoDone {
 				sudo,
