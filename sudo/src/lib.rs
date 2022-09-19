@@ -91,7 +91,7 @@ pub mod pallet {
 			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 
 			let res = call.dispatch_bypass_filter(
-				frame_system::RawOrigin::Signed(sudo.clone()).into(),
+				frame_system::RawOrigin::Signed(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?).into(),
 			);
 			Self::deposit_event(SudoDone {
 				sudo,
