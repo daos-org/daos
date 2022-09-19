@@ -32,9 +32,9 @@ pub use primitives::{
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
 
-// #[cfg(test)]
-// mod mock;
-//
+#[cfg(test)]
+mod mock;
+
 // #[cfg(test)]
 // mod tests;
 
