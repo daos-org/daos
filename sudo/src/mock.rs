@@ -1,4 +1,4 @@
-
+#![allow(dead_code)]
 use crate as sudo;
 use frame_system;
 use frame_support::traits::{ConstU16, ConstU32, ConstU64};

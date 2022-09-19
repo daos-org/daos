@@ -1,3 +1,4 @@
+
 use super::*;
 use sp_runtime::DispatchError;
 
@@ -62,6 +63,12 @@ pub trait EnsureOriginWithArg<OuterOrigin, Argument> {
 	fn successful_origin(a: &Argument) -> OuterOrigin;
 }
 
+impl<OuterOrigin: Clone, Argument: Clone> EnsureOriginWithArg<OuterOrigin, Argument> for () {
+	type Success = u64;
+	fn try_origin(_o: OuterOrigin, _a: &Argument) -> Result<Self::Success, OuterOrigin> {
+		Ok(Default::default())
+	}
+}
 
 impl<AccountId: Clone + Ord, DaoId: Default + Clone, Id: Clone> TryCreate<AccountId, DaoId, DispatchError> for ids::Nft<Id> {
 	fn try_create(&self, _who: AccountId, _dao_id: DaoId) -> Result<(), DispatchError> {
