@@ -100,8 +100,7 @@ pub mod pallet {
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| dao::Error::<T>::BadOrigin)?;
 			ensure!(dao_id == id, dao::Error::<T>::DaoIdNotMatch);
-			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-			let dao_account = concrete_id.into_account();
+			let dao_account = dao::Pallet::<T>::try_get_dao_account_id(dao_id)?;
 			let res =
 				call.dispatch_bypass_filter(frame_system::RawOrigin::Signed(dao_account).into());
 			Self::deposit_event(Event::DoAsDone {
