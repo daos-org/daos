@@ -35,6 +35,15 @@ pub trait AccountIdConversion<AccountId>: Sized {
 	fn try_from_account(a: &AccountId) -> Option<Self>;
 }
 
+// impl<AccountId: Sized> dyn AccountIdConversion<AccountId> {
+// 	fn into_account(&self) -> AccountId {
+// 		todo!()
+// 	}
+// 	fn try_from_account(a: &AccountId) -> Option<Self> {
+// 		None
+// 	}
+// }
+
 pub struct TrailingZeroInput<'a>(pub &'a [u8]);
 impl<'a> codec::Input for TrailingZeroInput<'a> {
 	fn remaining_len(&mut self) -> Result<Option<usize>, codec::Error> {

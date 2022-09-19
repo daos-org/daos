@@ -35,8 +35,10 @@ pub use sp_std::{
 	prelude::{self, *},
 	result,
 };
-// #[cfg(test)]
-// mod mock;
+
+#[cfg(test)]
+pub mod mock;
+
 //
 // #[cfg(test)]
 // mod tests;

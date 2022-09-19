@@ -12,6 +12,7 @@ impl From<BadOrigin> for &'static str {
 pub trait BaseCallFilter<Call> {
 	fn contains(&self, call: Call) -> bool;
 }
+
 pub trait SetCollectiveMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy, DispathErr> {
 	fn set_members_sorted(
 		dao_id: DaoId,
@@ -59,4 +60,17 @@ pub trait EnsureOriginWithArg<OuterOrigin, Argument> {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	fn successful_origin(a: &Argument) -> OuterOrigin;
+}
+
+
+impl<AccountId: Clone + Ord, DaoId: Default + Clone, Id: Clone> TryCreate<AccountId, DaoId, DispatchError> for ids::Nft<Id> {
+	fn try_create(&self, _who: AccountId, _dao_id: DaoId) -> Result<(), DispatchError> {
+		Ok(())
+	}
+}
+
+impl<Call: Clone, Id: Default> BaseCallFilter<Call> for ids::Nft<Id> {
+	fn contains(&self, _call: Call) -> bool {
+		true
+	}
 }
