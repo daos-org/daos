@@ -71,6 +71,7 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Not a sudo account, nor a dao account.
 		NotSudo,
+		RootNotExists,
 	}
 
 	#[pallet::hooks]
@@ -85,9 +86,7 @@ pub mod pallet {
 			dao_id: T::DaoId,
 			call: Box<<T as dao::Config>::Call>,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::try_get_sudo_account(dao_id)?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
+			let sudo = Self::check_origin(dao_id, origin)?;
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
 			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 
@@ -110,9 +109,7 @@ pub mod pallet {
 			dao_id: T::DaoId,
 			sudo_account: T::AccountId,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::try_get_sudo_account(dao_id)?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
+			let _sudo = Self::check_origin(dao_id, origin)?;
 			Account::<T>::insert(dao_id, sudo_account.clone());
 			Self::deposit_event(SetSudo { dao_id, sudo_account });
 			Ok(().into())
@@ -123,9 +120,7 @@ pub mod pallet {
 		/// delete root account.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn close_sudo(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::try_get_sudo_account(dao_id)?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
+			let _sudo = Self::check_origin(dao_id, origin)?;
 			Account::<T>::take(dao_id);
 
 			Self::deposit_event(CloseSudo { dao_id });
@@ -134,9 +129,15 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		fn try_get_sudo_account(dao_id: T::DaoId) -> result::Result<T::AccountId, DispatchError> {
-			Ok(Account::<T>::get(dao_id)
-				.unwrap_or(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?))
+		fn check_origin(dao_id: T::DaoId, o: OriginFor<T>) -> result::Result<T::AccountId, DispatchError> {
+			if let Ok(who) = dao::Pallet::<T>::ensrue_dao_root(o.clone(), dao_id) {
+				Ok(who)
+			}
+			else {
+				let who = ensure_signed(o)?;
+				ensure!( who == Account::<T>::get(dao_id).ok_or(Error::<T>::RootNotExists)?, Error::<T>::NotSudo);
+				Ok(who)
+			}
 		}
 	}
 }
