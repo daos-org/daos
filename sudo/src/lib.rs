@@ -22,8 +22,8 @@ use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
 
-// #[cfg(test)]
-// mod mock;
+#[cfg(test)]
+mod mock;
 //
 // #[cfg(test)]
 // mod tests;
