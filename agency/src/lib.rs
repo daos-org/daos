@@ -40,10 +40,11 @@ use primitives::{
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
+#[cfg(test)]
+mod mock;
 // #[cfg(test)]
 // mod tests;
 pub mod traits;
-// use traits::EnsureOriginWithArg;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
@@ -161,6 +162,9 @@ pub mod pallet {
 				>,
 			>;
 
+		/// The outer event type.
+		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+
 		/// The outer call dispatch type.
 		type Proposal: Parameter
 			+ Dispatchable<Origin = <Self as Config<I>>::Origin, PostInfo = PostDispatchInfo>
@@ -172,9 +176,6 @@ pub mod pallet {
 
 		/// External transactions that collectives can execute directly.
 		type CollectiveBaseCallFilter: Contains<Self::Proposal>;
-
-		/// The outer event type.
-		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// Default vote strategy of this collective.
 		type DefaultVote: DefaultVote;
