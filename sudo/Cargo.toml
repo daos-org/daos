@@ -21,6 +21,7 @@ sp-core = { default-features = false,  git = 'https://github.com/paritytech/subs
 frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
 frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 
 # local
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
@@ -40,6 +41,7 @@ std = [
     "dao/std",
 	"sp-core/std",
 	"sp-io/std",
+	"pallet-balances/std",
 ]
 
 runtime-benchmarks = [

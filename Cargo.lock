@@ -392,6 +392,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
@@ -408,6 +409,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
@@ -425,6 +427,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -454,6 +457,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -472,6 +476,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
@@ -1388,6 +1393,21 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
+name = "pallet-balances"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.25#3348e144f0a2b39ce08bd8e3b976c42fe0c990b9"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+]
 
 [[package]]
 name = "parity-scale-codec"

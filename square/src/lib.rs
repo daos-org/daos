@@ -45,8 +45,8 @@ pub type AssetId = u32;
 pub type PropIndex = u32;
 pub type ReferendumIndex = u32;
 
-// #[cfg(test)]
-// mod mock;
+#[cfg(test)]
+mod mock;
 //
 // #[cfg(test)]
 // mod tests;

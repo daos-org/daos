@@ -1,16 +1,14 @@
 #![allow(dead_code)]
-use crate as agency;
-use primitives::types::MemberCount;
+use crate as square;
 use frame_system;
-use frame_support::{traits::{ConstU16, ConstU32, ConstU64, Contains}, parameter_types};
+use scale_info::TypeInfo;
+use codec::{Encode, Decode, MaxEncodedLen};
+use frame_support::{traits::{ConstU16, ConstU32, ConstU64}, RuntimeDebug};
 use sp_core::H256;
-use sp_runtime::{
-	testing::Header,
-	traits::{BlakeTwo256, IdentityLookup},
-	BuildStorage,
-};
+use sp_runtime::{testing::Header, traits::{BlakeTwo256, IdentityLookup}, DispatchError};
 use primitives::ids::Nft;
 use sp_std::result::Result;
+use crate::Pledge;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 pub type Block = frame_system::mocking::MockBlock<Test>;
@@ -23,8 +21,9 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		DAO: dao::{ Pallet, Call, Event<T>, Storage },
-		Agency: agency::{ Pallet, Call, Event<T>, Storage, Origin<T> }
+		Square: square::{ Pallet, Call, Event<T>, Storage },
 	}
 );
 
@@ -64,6 +63,17 @@ impl TryFrom<Call> for u64 {
 	}
 }
 
+impl pallet_balances::Config for Test {
+	type Balance = u64;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = ConstU64<1>;
+	type AccountStore = System;
+	type MaxLocks = ();
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type WeightInfo = ();
+}
 
 impl dao::Config for Test {
 	type Event = Event;
@@ -74,29 +84,38 @@ impl dao::Config for Test {
 	type AfterCreate = ();
 }
 
-parameter_types! {
-	pub const MaxMembersForSystem: MemberCount = 2;
-}
+#[derive(PartialEq, Eq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen, Default)]
+pub struct Vote(pub u64);
 
-pub struct BaseCall;
+impl Pledge<u64, u64, u64, (), u64, DispatchError> for Vote {
+	fn try_vote(
+		&self,
+		_who: &u64,
+		_dao_id: &u64,
+		_conviction: &(),
+	) -> Result<(u64, u64), DispatchError> {
+		Ok((100u64, 100u64))
+	}
 
-impl Contains<Call> for BaseCall {
-	fn contains(_t: &Call) -> bool {
-		true
+	fn vote_end_do(&self, _who: &u64, _dao_id: &u64) -> Result<(), DispatchError> {
+		Ok(())
 	}
 }
 
-impl agency::Config for Test {
+
+impl square::Config for Test {
 	type Event = Event;
-	type Origin = Origin;
-	type Proposal = Call;
-	type CollectiveBaseCallFilter = BaseCall;
-	type DefaultVote = agency::PrimeDefaultVote;
-	type MaxMembersForSystem = MaxMembersForSystem;
+	type Pledge = Vote;
+	type Conviction = ();
+	type Currency = Balances;
 }
 
-
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let t = GenesisConfig { system: Default::default() }.build_storage().unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_balances::GenesisConfig::<Test> {
+		balances: vec![(1, 10), (2, 10), (3, 10), (10, 100), (20, 100), (30, 100)],
+	}
+	.assimilate_storage(&mut t)
+	.unwrap();
 	t.into()
 }
