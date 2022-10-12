@@ -40,7 +40,7 @@ use sp_runtime::{
 use sp_std::boxed::Box;
 pub use sp_std::{fmt::Debug, result};
 pub use traits::*;
-
+use weights::WeightInfo;
 pub type AssetId = u32;
 pub type PropIndex = u32;
 pub type ReferendumIndex = u32;
@@ -53,7 +53,7 @@ mod mock;
 //
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-
+pub mod weights;
 pub mod traits;
 
 /// Voting Statistics.
@@ -159,6 +159,8 @@ pub mod pallet {
 			+ ConvertInto<BalanceOf<Self>>;
 		/// Operations related to native assets.
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -601,7 +603,7 @@ pub mod pallet {
 							if x.tally.ayes.saturating_add(x.tally.nays) >=
 								MinVoteWeightOf::<T>::get(dao_id, call_id)
 							{
-								if x.tally.ayes > x.tally.nays {
+								if x.tally.ayes >= x.tally.nays {
 									approved = true;
 									let res = x.proposal.dispatch_bypass_filter(
 										frame_system::RawOrigin::Signed(

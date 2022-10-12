@@ -40,6 +40,7 @@ use primitives::{
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
+use weights::WeightInfo;
 #[cfg(test)]
 mod mock;
 // #[cfg(test)]
@@ -47,6 +48,7 @@ mod mock;
 pub mod traits;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+pub mod weights;
 
 // pub mod weights;
 // pub use weights::WeightInfo;
@@ -184,8 +186,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxMembersForSystem: Get<MemberCount>;
 
-		// /// Weight information for extrinsics in this pallet.
-		// type WeightInfo: WeightInfo;
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	/// Origin for the collective pallet.
@@ -373,7 +375,9 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			let result = proposal.dispatch(RawOrigin::Member(dao_id).into());
@@ -394,8 +398,9 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
-
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			ensure!(

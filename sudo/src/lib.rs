@@ -21,7 +21,7 @@ pub use pallet::*;
 use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
-
+use weights::WeightInfo;
 #[cfg(test)]
 mod mock;
 //
@@ -30,7 +30,7 @@ mod mock;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-
+pub mod weights;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -43,6 +43,8 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]

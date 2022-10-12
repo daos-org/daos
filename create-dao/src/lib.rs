@@ -20,6 +20,7 @@ pub use frame_support::{
 	codec::{Decode, Encode},
 	traits::IsSubType,
 };
+use weights::WeightInfo;
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
@@ -45,7 +46,7 @@ pub mod mock;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-
+pub mod weights;
 /// DAO's status.
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub enum Status {
@@ -129,6 +130,10 @@ pub mod pallet {
 
 		/// Do some things after creating dao, such as setting up a sudo account.
 		type AfterCreate: AfterCreate<Self::AccountId, Self::DaoId>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
+
 	}
 
 	#[pallet::pallet]

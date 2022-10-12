@@ -16,6 +16,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
+use weights::WeightInfo;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
@@ -34,7 +35,7 @@ pub use sp_std::{fmt::Debug, result};
 
 #[cfg(test)]
 mod mock;
-
+pub mod weights;
 // #[cfg(test)]
 // mod tests;
 
@@ -61,6 +62,9 @@ pub mod pallet {
 			(Self::DaoId, Self::CallId),
 			Success = Self::DaoId,
 		>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
