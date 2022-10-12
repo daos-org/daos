@@ -29,7 +29,6 @@ pub enum DoAsEnsureOrigin<Pro, C> {
 	Member,
 	Members(C),
 	Root,
-	NoPermission,
 }
 
 impl<Pro: Default, C: Default> Default for DoAsEnsureOrigin<Pro, C> {

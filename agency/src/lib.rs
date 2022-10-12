@@ -1,4 +1,4 @@
-// Copyright 2022 LISTEN TEAM.
+// Copyright 2022 daos-org.
 // This file is part of DAOS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,18 +34,21 @@ use frame_support::{
 pub use pallet::*;
 use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{EnsureOriginWithArg, GetCollectiveMembers, GetCollectiveMembersChecked},
+	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
+use weights::WeightInfo;
+#[cfg(test)]
+mod mock;
 // #[cfg(test)]
 // mod tests;
 pub mod traits;
-// use traits::EnsureOriginWithArg;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+pub mod weights;
 
 // pub mod weights;
 // pub use weights::WeightInfo;
@@ -104,6 +107,7 @@ pub enum RawOrigin<DaoId, I> {
 	Members(DaoId, MemberCount, MemberCount),
 	/// It has been condoned by a single member of the collective.
 	Member(DaoId),
+	/// Collective does not have execute permission.
 	Root(DaoId),
 	/// Dummy to manage the fact we have instancing.
 	_Phantom(PhantomData<I>),
@@ -138,7 +142,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{pallet_prelude::*, traits::Contains};
 	use frame_system::pallet_prelude::*;
-	use primitives::traits::BaseDaoCallFilter;
+	// use primitives::traits::BaseCallFilter;
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(4);
@@ -160,6 +164,9 @@ pub mod pallet {
 				>,
 			>;
 
+		/// The outer event type.
+		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+
 		/// The outer call dispatch type.
 		type Proposal: Parameter
 			+ Dispatchable<Origin = <Self as Config<I>>::Origin, PostInfo = PostDispatchInfo>
@@ -169,21 +176,18 @@ pub mod pallet {
 			+ IsType<<Self as frame_system::Config>::Call>
 			+ GetDispatchInfo;
 
+		/// External transactions that collectives can execute directly.
 		type CollectiveBaseCallFilter: Contains<Self::Proposal>;
-
-		/// The outer event type.
-		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// Default vote strategy of this collective.
 		type DefaultVote: DefaultVote;
 
-		type GetCollectiveMembers: GetCollectiveMembers<Self::AccountId, Self::DaoId>;
-
+		/// Collective in DAO Maximum number of people.
 		#[pallet::constant]
 		type MaxMembersForSystem: Get<MemberCount>;
 
-		// /// Weight information for extrinsics in this pallet.
-		// type WeightInfo: WeightInfo;
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	/// Origin for the collective pallet.
@@ -196,9 +200,10 @@ pub mod pallet {
 	pub type Proposals<T: Config<I>, I: 'static = ()> =
 		StorageMap<_, Identity, T::DaoId, Vec<T::Hash>, ValueQuery>;
 
+	/// The origin of each call.
 	#[pallet::storage]
 	#[pallet::getter(fn ensures)]
-	pub type Ensures<T: Config<I>, I: 'static = ()> = StorageDoubleMap<
+	pub type EnsureOrigins<T: Config<I>, I: 'static = ()> = StorageDoubleMap<
 		_,
 		Blake2_128,
 		<T as dao::Config>::DaoId,
@@ -208,10 +213,17 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// All members of the collective.
 	#[pallet::storage]
-	#[pallet::getter(fn collectives)]
+	#[pallet::getter(fn collective_members)]
 	pub type CollectiveMembers<T: Config<I>, I: 'static = ()> =
 		StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
+
+	/// The prime of the collective.
+	#[pallet::storage]
+	#[pallet::getter(fn prime)]
+	pub type Prime<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Identity, <T as dao::Config>::DaoId, T::AccountId>;
 
 	#[pallet::type_value]
 	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> T::BlockNumber {
@@ -299,45 +311,23 @@ pub mod pallet {
 			no: MemberCount,
 		},
 		/// A motion was approved by the required threshold.
-		Approved {
-			proposal_hash: T::Hash,
-		},
+		Approved { proposal_hash: T::Hash },
 		/// A motion was not approved by the required threshold.
-		Disapproved {
-			proposal_hash: T::Hash,
-		},
+		Disapproved { proposal_hash: T::Hash },
 		/// A motion was executed; result will be `Ok` if it returned without error.
-		Executed {
-			proposal_hash: T::Hash,
-			result: DispatchResult,
-		},
+		Executed { proposal_hash: T::Hash, result: DispatchResult },
 		/// A single member did some action; result will be `Ok` if it returned without error.
-		MemberExecuted {
-			proposal_hash: T::Hash,
-			result: DispatchResult,
-		},
+		MemberExecuted { proposal_hash: T::Hash, result: DispatchResult },
 		/// A proposal was closed because its threshold was reached or after its duration was up.
-		Closed {
-			proposal_hash: T::Hash,
-			yes: MemberCount,
-			no: MemberCount,
-		},
-		SetMotionDuration {
-			dao_id: T::DaoId,
-			duration: T::BlockNumber,
-		},
-		SetMaxProposals {
-			dao_id: T::DaoId,
-			max: ProposalIndex,
-		},
-		SetMaxMembers {
-			dao_id: T::DaoId,
-			max: MemberCount,
-		},
-		DoAsDone {
-			sudo_result: DispatchResult,
-		},
-		SetEnsure(T::DaoId, T::CallId, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
+		Closed { proposal_hash: T::Hash, yes: MemberCount, no: MemberCount },
+		/// Set the voting duration for a proposal in each DAO.
+		SetMotionDuration { dao_id: T::DaoId, duration: T::BlockNumber },
+		/// Set a cap on the number of proposals in each DAO.
+		SetMaxProposals { dao_id: T::DaoId, max: ProposalIndex },
+		/// Set the upper limit of the number of council members in each DAO.
+		SetMaxMembers { dao_id: T::DaoId, max: MemberCount },
+		/// Set Origin for a method in DAO.
+		SetOrigin(T::DaoId, T::CallId, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
 	}
 
 	/// Old name generated by `decl_event`.
@@ -366,10 +356,11 @@ pub mod pallet {
 		WrongProposalWeight,
 		/// The given length bound for the proposal was too low.
 		WrongProposalLength,
-		BadOrigin,
-		MembersNotExsits,
+		/// The number of people exceeds the maximum limit
+		MembersTooLarge,
+		/// The proportion is more than 100%
 		ProportionErr,
-		NotDaoAccount,
+		/// Threshold exceeds the number of people
 		ThresholdWrong,
 	}
 
@@ -384,7 +375,9 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			let result = proposal.dispatch(RawOrigin::Member(dao_id).into());
@@ -405,8 +398,9 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
-
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			ensure!(
@@ -415,11 +409,11 @@ pub mod pallet {
 			);
 
 			ensure!(
-				Self::members(dao_id, &who)?.len() as u32 >= threshold,
+				Self::collective_members(dao_id).len() as u32 >= threshold,
 				Error::<T, I>::ThresholdWrong
 			);
 			if threshold < 2 {
-				let seats = Self::members(dao_id, &who)?.len() as MemberCount;
+				let seats = Self::collective_members(dao_id).len() as MemberCount;
 				let result = proposal.dispatch(RawOrigin::Members(dao_id, 1, seats).into());
 				Self::deposit_event(Event::Executed {
 					proposal_hash,
@@ -527,7 +521,7 @@ pub mod pallet {
 			proposal_hash: T::Hash,
 			#[pallet::compact] index: ProposalIndex,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
+			let _ = ensure_signed(origin)?;
 
 			let voting =
 				Self::voting(dao_id, &proposal_hash).ok_or(Error::<T, I>::ProposalMissing)?;
@@ -535,7 +529,7 @@ pub mod pallet {
 
 			let mut no_votes = voting.nays.len() as MemberCount;
 			let mut yes_votes = voting.ayes.len() as MemberCount;
-			let seats = Self::members(dao_id, &who)?.len() as MemberCount;
+			let seats = Self::collective_members(dao_id).len() as MemberCount;
 			let approved = yes_votes >= voting.threshold;
 			let disapproved = seats.saturating_sub(no_votes) < voting.threshold;
 			// Allow (dis-)approving the proposal as soon as there are enough votes.
@@ -557,8 +551,7 @@ pub mod pallet {
 				Error::<T, I>::TooEarly
 			);
 
-			let prime_vote = T::GetCollectiveMembers::get_prime(dao_id)
-				.map(|who| voting.ayes.iter().any(|a| a == &who));
+			let prime_vote = Self::prime(dao_id).map(|who| voting.ayes.iter().any(|a| a == &who));
 
 			// default voting strategy.
 			let default = T::DefaultVote::default_vote(prime_vote, yes_votes, no_votes, seats);
@@ -583,8 +576,9 @@ pub mod pallet {
 			}
 		}
 
-		/// Disapprove a proposal, close, and remove it from the system, regardless of its current
-		/// state.
+		/// call id:201
+		///
+		/// Disapprove a proposal, close, and remove it from the system, regardless of its current state.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn disapprove_proposal(
 			origin: OriginFor<T>,
@@ -596,6 +590,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id:202
+		///
+		/// Set the length of time for voting on proposal.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
@@ -608,6 +605,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id:203
+		///
+		/// Set a cap on the number of agency proposals
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_proposals(
 			origin: OriginFor<T>,
@@ -620,6 +620,9 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id:204
+		///
+		/// Set the maximum number of members in the agency.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_max_members(
 			origin: OriginFor<T>,
@@ -632,23 +635,17 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id:205
+		///
+		/// Set origin for a specific call.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_ensure_origin_for_every_call(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			call: Box<<T as dao::Config>::Call>,
+			call_id: T::CallId,
 			ensure: DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
-
-			ensure!(
-				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
-			);
-
-			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-				.ok()
-				.ok_or(dao::Error::<T>::HaveNoCallId)?;
 
 			if let DoAsEnsureOrigin::Proportion(x) = ensure.clone() {
 				match x {
@@ -661,9 +658,8 @@ pub mod pallet {
 				}
 			}
 
-			// let real_id = call_id.try_into().ok().ok_or(dao::Error::<T>::InVailCallId)?;
-			Ensures::<T, I>::insert(dao_id, call_id, ensure.clone());
-			Self::deposit_event(Event::SetEnsure(dao_id, call_id, ensure));
+			EnsureOrigins::<T, I>::insert(dao_id, call_id, ensure.clone());
+			Self::deposit_event(Event::SetOrigin(dao_id, call_id, ensure));
 			Ok(().into())
 		}
 	}
@@ -684,25 +680,8 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn is_member(dao_id: T::DaoId, who: &T::AccountId) -> result::Result<bool, DispatchError> {
 		// Note: The dispatchables *do not* use this to check membership so make sure
 		// to update those if this is changed.
-		let members = Self::members(dao_id, &who)?;
+		let members = Self::collective_members(dao_id);
 		Ok(members.contains(&who))
-	}
-
-	pub fn members(
-		dao_id: T::DaoId,
-		who: &T::AccountId,
-	) -> result::Result<Vec<T::AccountId>, DispatchError> {
-		if cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-			return Ok(CollectiveMembers::<T, I>::get(dao_id))
-		} else {
-			let mut members =
-				Self::get_members_sorted(dao_id, &T::GetCollectiveMembers::get_members(dao_id))?;
-			if members.is_empty() {
-				members.push(who.clone());
-				return Ok(members)
-			}
-			Ok(members)
-		}
 	}
 
 	/// Ensure that the right proposal bounds were passed and get the proposal from storage.
@@ -761,17 +740,18 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 }
 
-impl<T: Config<I>, I: 'static> GetCollectiveMembersChecked<T::AccountId, T::DaoId, DispatchError>
+impl<T: Config<I>, I: 'static> SetCollectiveMembers<T::AccountId, T::DaoId, DispatchError>
 	for Pallet<T, I>
 {
-	fn get_members_sorted(
+	fn set_members_sorted(
 		dao_id: T::DaoId,
 		members: &[T::AccountId],
-	) -> Result<Vec<T::AccountId>, DispatchError> {
+		prime: Option<T::AccountId>,
+	) -> Result<(), DispatchError> {
 		if members.len() >
 			MaxMembers::<T, I>::get(dao_id).min(T::MaxMembersForSystem::get()) as usize
 		{
-			return Err(Error::<T, I>::MembersNotExsits)?
+			return Err(Error::<T, I>::MembersTooLarge)?
 		}
 		// remove accounts from all current voting in motions.
 		let mut members = members.to_vec();
@@ -793,7 +773,12 @@ impl<T: Config<I>, I: 'static> GetCollectiveMembersChecked<T::AccountId, T::DaoI
 				}
 			});
 		}
-		Ok(members)
+		if let Some(p) = prime {
+			Prime::<T, I>::insert(dao_id, p);
+		}
+		CollectiveMembers::<T, I>::insert(dao_id, members);
+
+		Ok(())
 	}
 }
 
@@ -807,7 +792,7 @@ impl<T: Config<I>, I: 'static>
 		o: <T as Config<I>>::Origin,
 		a: &(T::DaoId, T::CallId),
 	) -> Result<Self::Success, <T as Config<I>>::Origin> {
-		let ensure = Ensures::<T, I>::get(a.0, a.1);
+		let ensure = EnsureOrigins::<T, I>::get(a.0, a.1);
 		match ensure {
 			DoAsEnsureOrigin::Proportion(pro) => match pro {
 				Proportion::MoreThan(N, D) => o.into().and_then(|o| match o {

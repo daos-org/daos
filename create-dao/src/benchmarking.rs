@@ -1,3 +1,4 @@
+
 use super::*;
 use crate::{Config, Pallet as Dao};
 use frame_benchmarking::{
@@ -9,16 +10,16 @@ fn get_alice<T: Config>() -> T::AccountId {
 	account("alice", 1, 1)
 }
 
-fn get_dao_account<T: Config>(second_id: T::SecondId) -> T::AccountId {
+fn get_dao_account<T: Config>(second_id: T::ConcreteId) -> T::AccountId {
 	second_id.into_account()
 }
 
-fn creat_dao<T: Config>() -> (T::DaoId, T::SecondId) {
+fn creat_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
 	let alice = get_alice::<T>();
 	let dao_id = T::DaoId::default();
-	let second_id: T::SecondId = Default::default();
+	let second_id: T::ConcreteId = Default::default();
 	assert!(
-		Dao::<T>::create_dao(SystemOrigin::Signed(alice).into(), dao_id, second_id.clone()).is_ok()
+		Dao::<T>::create_dao(SystemOrigin::Signed(alice).into(), second_id, vec![1;4]).is_ok()
 	);
 	(dao_id, second_id)
 }
@@ -28,7 +29,7 @@ benchmarks! {
 		let alice = get_alice::<T>();
 		let dao_id = T::DaoId::default();
 		let second_id = Default::default();
-	}:_(SystemOrigin::Signed(alice), dao_id, second_id)
+	}:_(SystemOrigin::Signed(alice), second_id, vec![1;4])
 	verify {
 		assert!(Dao::<T>::daos(dao_id).is_some());
 	}

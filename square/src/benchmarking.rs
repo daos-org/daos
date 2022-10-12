@@ -1,3 +1,8 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(non_upper_case_globals)]
+#![allow(unused_must_use)]
+
 use super::*;
 use crate::{Config, Pallet as Democracy};
 use dao::Call as DaoCall;
@@ -14,32 +19,30 @@ const LaunchTime: u32 = 1000000;
 
 fn get_alice<T: Config>() -> T::AccountId {
 	let alice = account("alice", 1, 1);
-	T::MultiCurrency::deposit(
-		T::GetNativeCurrencyId::get(),
+	T::Currency::deposit_creating(
 		&alice,
 		(100000 * DOLLARS).saturated_into::<BalanceOf<T>>(),
 	);
 	alice
 }
 
-fn get_dao_account<T: Config>(second_id: T::SecondId) -> T::AccountId {
+fn get_dao_account<T: Config>(second_id: T::ConcreteId) -> T::AccountId {
 	let who = second_id.into_account();
-	T::MultiCurrency::deposit(
-		T::GetNativeCurrencyId::get(),
+	T::Currency::deposit_creating(
 		&who,
 		(100000 * DOLLARS).saturated_into::<BalanceOf<T>>(),
 	);
 	who
 }
 
-fn creat_dao<T: Config>() -> (T::DaoId, T::SecondId) {
+fn creat_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
 	let alice = get_alice::<T>();
 	let dao_id = T::DaoId::default();
-	let second_id: T::SecondId = Default::default();
+	let second_id: T::ConcreteId = Default::default();
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(alice).into(),
-		dao_id,
-		second_id.clone()
+		second_id,
+		vec![1;4],
 	)
 	.is_ok());
 	(dao_id, second_id)
@@ -51,7 +54,7 @@ fn get_call<T: Config>(dao_id: T::DaoId) -> (<T as dao::Config>::Call, T::Hash) 
 	(proposal.clone(), T::Hashing::hash_of(&proposal))
 }
 
-fn create_proposal<T: Config>() -> (T::DaoId, T::SecondId, ProposalIndex) {
+fn create_proposal<T: Config>() -> (T::DaoId, T::ConcreteId, ProposalIndex) {
 	let (dao_id, second_id) = creat_dao::<T>();
 	let (proposal, _) = get_call::<T>(dao_id);
 	let amount = (1000 * DOLLARS).saturated_into::<BalanceOf<T>>();
@@ -66,23 +69,23 @@ fn create_proposal<T: Config>() -> (T::DaoId, T::SecondId, ProposalIndex) {
 	(dao_id, second_id, 0 as ProposalIndex)
 }
 
-fn launch<T: Config>() -> (T::DaoId, T::SecondId, ProposalIndex) {
+fn launch<T: Config>() -> (T::DaoId, T::ConcreteId, ProposalIndex) {
 	let (dao_id, second_id, index) = create_proposal::<T>();
 	let dao = get_dao_account::<T>(second_id.clone());
-	Democracy::<T>::start_table(SystemOrigin::Signed(dao).into(), dao_id);
+	Democracy::<T>::open_table(SystemOrigin::Signed(dao).into(), dao_id);
 	(dao_id, second_id, 0 as ProposalIndex)
 }
 
 fn vote1<T: Config>() -> (T::DaoId, T::AccountId, ProposalIndex) {
 	let (dao_id, second_id, index) = launch::<T>();
 	let dao = get_dao_account::<T>(second_id);
-	assert!(Democracy::<T>::vote(
+	assert!(Democracy::<T>::vote_for_referendum(
 		SystemOrigin::Signed(dao.clone()).into(),
 		dao_id,
 		index,
-		T::Vote::default(),
+		T::Pledge::default(),
 		T::Conviction::default(),
-		Attitude::AYES
+		Opinion::AYES
 	)
 	.is_ok());
 	(dao_id, dao, index)
@@ -112,15 +115,15 @@ benchmarks! {
 		let dao = get_dao_account::<T>(second_id);
 	}:_(SystemOrigin::Signed(dao), dao_id, index)
 
-	start_table {
+	open_table {
 		let (dao_id, second_id, index) = create_proposal::<T>();
 		let dao = get_dao_account::<T>(second_id);
 	}:_(SystemOrigin::Signed(dao), dao_id)
 
-	vote {
+	vote_for_referendum {
 		let (dao_id, second_id, index) = launch::<T>();
 		let dao = get_dao_account::<T>(second_id);
-	}:_(SystemOrigin::Signed(dao), dao_id, index, T::Vote::default(), T::Conviction::default(), Attitude::AYES)
+	}:_(SystemOrigin::Signed(dao), dao_id, index, T::Pledge::default(), T::Conviction::default(), Opinion::AYES)
 
 	cancel_vote {
 		let (dao_id, dao_account, index) = vote1::<T>();
@@ -135,7 +138,38 @@ benchmarks! {
 		let account = enact::<T>();
 	}:_(SystemOrigin::Signed(account))
 
-	unreserve {
-		let account = enact::<T>();
-	}:_(SystemOrigin::Signed(account))
+	set_min_vote_weight_for_every_call {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::CallId::default(), BalanceOf::<T>::from(0u32))
+
+	set_max_public_props {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, 100u32)
+
+	set_launch_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_minimum_deposit {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, BalanceOf::<T>::from(0u32))
+
+	set_voting_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_rerserve_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
+
+	set_enactment_period {
+		let (dao_id, second_id) = creat_dao::<T>();
+		let dao = get_dao_account::<T>(second_id);
+	}:_(SystemOrigin::Signed(dao), dao_id, T::BlockNumber::from(100u32))
 }

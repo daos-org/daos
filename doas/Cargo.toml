@@ -16,10 +16,13 @@ codec                 = { package = 'parity-scale-codec', version = '3.0.0', def
 
 sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
 sp-std = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
+sp-core = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
+sp-io = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
 
 frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
 frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 
 # local
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
@@ -43,7 +46,9 @@ std = [
 	"sp-std/std",
 	"sp-runtime/std",
 	"dao/std",
-#	"daos-collective/std",
+	"sp-core/std",
+	"sp-io/std",
+	"pallet-balances/std",
 ]
 
 runtime-benchmarks = [

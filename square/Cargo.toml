@@ -19,9 +19,7 @@ sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/s
 frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
 frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-
-# orml
-orml-traits = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = 'polkadot-v0.9.25'}
+pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 
 # local
 dao = { path = "../create-dao", package = "daos-create-dao", default-features = false}
@@ -43,9 +41,9 @@ std = [
 	'sp-std/std',
 	'frame-support/std',
 	'frame-system/std',
-	'orml-traits/std',
 	'sp-runtime/std',
 	'dao/std',
+	'pallet-balances/std',
 ]
 
 runtime-benchmarks = [

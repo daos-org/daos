@@ -1,4 +1,4 @@
-// Copyright 2022 LISTEN TEAM.
+// Copyright 2022 daos-org.
 // This file is part of DAOS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
-use dao::{self, BaseDaoCallFilter};
+use weights::WeightInfo;
+use dao::{self, BaseCallFilter};
 pub use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	pallet_prelude::StorageDoubleMap,
@@ -32,9 +33,9 @@ pub use primitives::{
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
 
-// #[cfg(test)]
-// mod mock;
-//
+#[cfg(test)]
+mod mock;
+pub mod weights;
 // #[cfg(test)]
 // mod tests;
 
@@ -55,11 +56,15 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		/// Origin must be from collective.
 		type DoAsOrigin: EnsureOriginWithArg<
 			Self::Origin,
 			(Self::DaoId, Self::CallId),
 			Success = Self::DaoId,
 		>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -69,49 +74,37 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SetEnsure(T::DaoId, u32, DoAsEnsureOrigin<Proportion<MemberCount>, MemberCount>),
+		/// The collective successfully executes a call based on origin.
 		DoAsDone { sudo_result: DispatchResult },
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
-	pub enum Error<T> {
-		DaoNotExists,
-		NotDaoAccount,
-		CallNotSupport,
-		InVailDaoId,
-		InVailCall,
-		InVailCallId,
-		HaveNoCallId,
-		BadOrigin,
-		ProportionErr,
-		NotDaoId,
-	}
+	pub enum Error<T> {}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		/// The agency execute an external call
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn do_as_collective(
+		pub fn do_as_agency(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			call: Box<<T as dao::Config>::Call>,
 		) -> DispatchResultWithPostInfo {
 			ensure!(
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
-				dao::Error::<T>::NotDaoSupportCall
+				dao::Error::<T>::InVailCall
 			);
-			let call_id: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-				.ok()
-				.ok_or(Error::<T>::HaveNoCallId)?;
+			let call_id: T::CallId =
+				TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
-				.map_err(|_| Error::<T>::BadOrigin)?;
-			ensure!(dao_id == id, dao::Error::<T>::NotDaoId);
-			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-			let dao_account = concrete_id.into_account();
+				.map_err(|_| dao::Error::<T>::BadOrigin)?;
+			ensure!(dao_id == id, dao::Error::<T>::DaoIdNotMatch);
+			let dao_account = dao::Pallet::<T>::try_get_dao_account_id(dao_id)?;
 			let res =
 				call.dispatch_bypass_filter(frame_system::RawOrigin::Signed(dao_account).into());
 			Self::deposit_event(Event::DoAsDone {

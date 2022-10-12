@@ -1,4 +1,4 @@
-// Copyright 2022 LISTEN TEAM.
+// Copyright 2022 daos-org.
 // This file is part of DAOS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,35 +15,36 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use dao::{self, BaseDaoCallFilter};
+pub use dao::{self, BaseCallFilter};
 pub use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo};
 pub use pallet::*;
 use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
-
-// #[cfg(test)]
-// mod mock;
+use weights::WeightInfo;
+#[cfg(test)]
+mod mock;
 //
 // #[cfg(test)]
 // mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-
+pub mod weights;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use crate::Event::{CloseSudo, SetSudoAccount, SudoDone};
+	use crate::Event::{CloseSudo, SetSudo, SudoDone};
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
-	use primitives::AccountIdConversion;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -51,26 +52,28 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
+	/// Root account id.
 	#[pallet::storage]
 	#[pallet::getter(fn sudo_account)]
-	pub type SudoAccount<T: Config> = StorageMap<_, Identity, T::DaoId, T::AccountId>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn is_must_democracy)]
-	pub type IsMustDemocracy<T: Config> = StorageMap<_, Identity, T::DaoId, bool, ValueQuery>;
+	pub type Account<T: Config> = StorageMap<_, Identity, T::DaoId, T::AccountId>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
+		/// root executes external transaction successfully.
 		SudoDone { sudo: T::AccountId, sudo_result: DispatchResult },
-		SetSudoAccount { dao_id: T::DaoId, sudo_account: T::AccountId },
-		CloseSudo { dao_id: T::DaoId, is_close: bool },
+		/// Set root account or reopen sudo.
+		SetSudo { dao_id: T::DaoId, sudo_account: T::AccountId },
+		/// delete root account.
+		CloseSudo { dao_id: T::DaoId },
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Not a sudo account, nor a dao account.
 		NotSudo,
+		RootNotExists,
 	}
 
 	#[pallet::hooks]
@@ -78,23 +81,19 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		/// Execute external transactions as root
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn sudo(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			call: Box<<T as dao::Config>::Call>,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::get_sudo_account(dao_id, IsMustDemocracy::<T>::get(dao_id))?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
+			let sudo = Self::check_origin(dao_id, origin)?;
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
-			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::NotDaoSupportCall);
-			let _: T::CallId = TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone())
-				.ok()
-				.ok_or(dao::Error::<T>::HaveNoCallId)?;
+			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 
 			let res = call.dispatch_bypass_filter(
-				frame_system::RawOrigin::Signed(concrete_id.into_account()).into(),
+				frame_system::RawOrigin::Signed(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?).into(),
 			);
 			Self::deposit_event(SudoDone {
 				sudo,
@@ -103,47 +102,43 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// call id: 401
+		///
+		/// Set root account or reopen sudo.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn set_sudo_account(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			sudo_account: T::AccountId,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::get_sudo_account(dao_id, IsMustDemocracy::<T>::get(dao_id))?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
-			SudoAccount::<T>::insert(dao_id, sudo_account.clone());
-			Self::deposit_event(SetSudoAccount { dao_id, sudo_account });
+			let _sudo = Self::check_origin(dao_id, origin)?;
+			Account::<T>::insert(dao_id, sudo_account.clone());
+			Self::deposit_event(SetSudo { dao_id, sudo_account });
 			Ok(().into())
 		}
 
+		/// call id: 402
+		///
+		/// delete root account.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
-		pub fn close_sudo(
-			origin: OriginFor<T>,
-			dao_id: T::DaoId,
-			is_close: bool,
-		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let sudo = Self::get_sudo_account(dao_id, IsMustDemocracy::<T>::get(dao_id))?;
-			ensure!(sudo == who, Error::<T>::NotSudo);
-			IsMustDemocracy::<T>::insert(dao_id, is_close);
-			Self::deposit_event(CloseSudo { dao_id, is_close });
+		pub fn close_sudo(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
+			let _sudo = Self::check_origin(dao_id, origin)?;
+			Account::<T>::take(dao_id);
+
+			Self::deposit_event(CloseSudo { dao_id });
 			Ok(().into())
 		}
 	}
 
 	impl<T: Config> Pallet<T> {
-		fn get_sudo_account(
-			dao_id: T::DaoId,
-			is_must_democracy: bool,
-		) -> result::Result<T::AccountId, DispatchError> {
-			if is_must_democracy {
-				Ok(dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account())
-			} else {
-				Ok(SudoAccount::<T>::get(dao_id).unwrap_or(
-					dao::Pallet::<T>::try_get_creator(dao_id)
-						.unwrap_or(dao::Pallet::<T>::try_get_concrete_id(dao_id)?.into_account()),
-				))
+		fn check_origin(dao_id: T::DaoId, o: OriginFor<T>) -> result::Result<T::AccountId, DispatchError> {
+			if let Ok(who) = dao::Pallet::<T>::ensrue_dao_root(o.clone(), dao_id) {
+				Ok(who)
+			}
+			else {
+				let who = ensure_signed(o)?;
+				ensure!( who == Account::<T>::get(dao_id).ok_or(Error::<T>::RootNotExists)?, Error::<T>::NotSudo);
+				Ok(who)
 			}
 		}
 	}

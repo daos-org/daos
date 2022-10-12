@@ -13,17 +13,17 @@ fn get_alice<T: Config>() -> T::AccountId {
 	account("alice", 1, 1)
 }
 
-fn get_dao_account<T: Config>(second_id: T::SecondId) -> T::AccountId {
+fn get_dao_account<T: Config>(second_id: T::ConcreteId) -> T::AccountId {
 	second_id.into_account()
 }
 
-fn create_dao<T: Config>() -> (T::DaoId, T::SecondId) {
-	let second_id = T::SecondId::default();
+fn create_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
+	let second_id = T::ConcreteId::default();
 	let dao_id = T::DaoId::default();
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(get_alice::<T>()).into(),
-		dao_id,
-		second_id.clone()
+		second_id,
+		vec![1;4],
 	)
 	.is_ok());
 	(dao_id, second_id)
@@ -51,5 +51,5 @@ benchmarks! {
 	close_sudo {
 		let alice = get_alice::<T>();
 		let (dao_id, second_id) = create_dao::<T>();
-	}:_(SystemOrigin::Signed(alice), dao_id, true)
+	}:_(SystemOrigin::Signed(alice), dao_id)
 }

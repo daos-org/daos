@@ -1,4 +1,4 @@
-// Copyright 2022 LISTEN TEAM.
+// Copyright 2022 daos-org.
 // This file is part of DAOS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,11 @@ pub use frame_support::{
 	codec::{Decode, Encode},
 	traits::IsSubType,
 };
+use weights::WeightInfo;
 pub use pallet::*;
 pub use primitives::{
 	constant::weight::DAOS_BASE_WEIGHT,
-	traits::{BaseDaoCallFilter, GetCollectiveMembers, TryCreate},
+	traits::{AfterCreate, BaseCallFilter, TryCreate},
 	types::RealCallId,
 	AccountIdConversion,
 };
@@ -35,20 +36,47 @@ pub use sp_std::{
 	prelude::{self, *},
 	result,
 };
-// #[cfg(test)]
-// mod mock;
+
+#[cfg(test)]
+pub mod mock;
+
 //
 // #[cfg(test)]
 // mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+pub mod weights;
+/// DAO's status.
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+pub enum Status {
+	/// In use.
+	Active,
+	/// Does not work properly.
+	InActive,
+}
 
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
-pub struct DaoInfo<AccountId, BlockNumber, ConcreteId> {
+impl Default for Status {
+	fn default() -> Self {
+		Status::Active
+	}
+}
+
+/// DAO specific information
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
+	/// creator of DAO.
 	creator: AccountId,
+	/// The block that creates the DAO.
 	pub start_block: BlockNumber,
-	id: ConcreteId,
+	/// The id of the specific group mapped by dao.
+	pub concrete_id: ConcreteId,
+	/// DAO account id.
+	pub dao_account_id: AccountId,
+	/// Description of the DAO.
+	describe: Vec<u8>,
+	/// State of the DAO.
+	status: Status,
 }
 
 #[frame_support::pallet]
@@ -59,6 +87,7 @@ pub mod pallet {
 		weights::GetDispatchInfo,
 	};
 	use frame_system::pallet_prelude::*;
+	use sp_runtime::traits::{CheckedAdd, One};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -66,6 +95,7 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		/// All calls supported by DAO.
 		type Call: Parameter
 			+ UnfilteredDispatchable<Origin = Self::Origin>
 			+ GetDispatchInfo
@@ -74,6 +104,7 @@ pub mod pallet {
 			+ IsSubType<Call<Self>>
 			+ IsType<<Self as frame_system::Config>::Call>;
 
+		/// Each Call has its own id.
 		type CallId: Parameter
 			+ Copy
 			+ MaybeSerializeDeserialize
@@ -82,17 +113,27 @@ pub mod pallet {
 			+ Default
 			+ TryFrom<<Self as pallet::Config>::Call>;
 
-		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen;
+		/// Each DAO has its own id.
+		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen + CheckedAdd + One;
 
+		/// The specific group on the chain mapped by DAO.
 		type ConcreteId: Parameter
 			+ Member
 			+ TypeInfo
 			+ MaxEncodedLen
 			+ Clone
+			+ Copy
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
-			+ BaseDaoCallFilter<<Self as pallet::Config>::Call>
+			+ BaseCallFilter<<Self as pallet::Config>::Call>
 			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
+
+		/// Do some things after creating dao, such as setting up a sudo account.
+		type AfterCreate: AfterCreate<Self::AccountId, Self::DaoId>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: WeightInfo;
+
 	}
 
 	#[pallet::pallet]
@@ -100,30 +141,46 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
+	/// All DAOs that have been created.
 	#[pallet::storage]
 	#[pallet::getter(fn daos)]
-	pub type Daos<T: Config> =
-		StorageMap<_, Identity, T::DaoId, DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>>;
+	pub type Daos<T: Config> = StorageMap<
+		_,
+		Identity,
+		T::DaoId,
+		DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
+	>;
+
+	/// The id of the next dao to be created.
+	#[pallet::storage]
+	#[pallet::getter(fn next_dao_id)]
+	pub type NextDaoId<T: Config> = StorageValue<_, T::DaoId, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		SomethingStored(u32, T::AccountId),
+		/// The new DAO is successfully created.
 		CreatedDao(T::AccountId, T::DaoId, T::ConcreteId),
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Do not have permission to create.
 		HaveNoCreatePermission,
+		/// DAO already exists
 		DaoExists,
+		/// DAO does not exist.
 		DaoNotExists,
-		InVailCallId,
+		/// DAO unsupported call
 		InVailCall,
-		InVailDaoId,
+		/// Wrong origin.
 		BadOrigin,
-		NotDaoSupportCall,
-		NotDaoId,
-		HaveNoCallId,
+		/// Not the id of this dao.
+		DaoIdNotMatch,
+		/// The description of the DAO is too long.
+		DescribeTooLong,
+		/// Numerical calculation overflow error.
+		Overflow,
 	}
 
 	#[pallet::hooks]
@@ -131,30 +188,47 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		/// Create a DAO for a specific group
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn create_dao(
 			origin: OriginFor<T>,
-			dao_id: T::DaoId,
 			concrete_id: T::ConcreteId,
+			describe: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			let creator = ensure_signed(origin)?;
-			ensure!(!Daos::<T>::contains_key(dao_id), Error::<T>::DaoExists);
+
+			ensure!(describe.len() <= 50, Error::<T>::DescribeTooLong);
+
+			let dao_id = NextDaoId::<T>::get();
 
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				concrete_id
-					.try_create(creator.clone(), dao_id)
-					.map_err(|_| Error::<T>::HaveNoCreatePermission)?;
+				concrete_id.try_create(creator.clone(), dao_id)?;
 			}
 
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
-				DaoInfo { creator: creator.clone(), start_block: now, id: concrete_id.clone() },
+				DaoInfo {
+					creator: creator.clone(),
+					start_block: now,
+					concrete_id: concrete_id.clone(),
+					describe,
+					status: Status::Active,
+					dao_account_id: concrete_id.clone().into_account(),
+				},
 			);
+			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
+			NextDaoId::<T>::put(next_id);
+
+			T::AfterCreate::do_something(creator.clone(), dao_id);
+
 			Self::deposit_event(Event::CreatedDao(creator, dao_id, concrete_id));
 			Ok(().into())
 		}
 
+		/// call id:101
+		///
+		/// dao remark something.
 		#[pallet::weight(DAOS_BASE_WEIGHT)]
 		pub fn dao_remark(
 			origin: OriginFor<T>,
@@ -176,7 +250,10 @@ pub mod pallet {
 
 		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId>, DispatchError> {
+		) -> result::Result<
+			DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
+			DispatchError,
+		> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}
@@ -185,7 +262,14 @@ pub mod pallet {
 			dao_id: <T as pallet::Config>::DaoId,
 		) -> result::Result<T::ConcreteId, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
-			Ok(dao.id)
+			Ok(dao.concrete_id)
+		}
+
+		pub fn try_get_dao_account_id(
+			dao_id: <T as pallet::Config>::DaoId,
+		) -> result::Result<T::AccountId, DispatchError> {
+			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
+			Ok(dao.dao_account_id)
 		}
 
 		pub fn ensrue_dao_root(
@@ -193,8 +277,8 @@ pub mod pallet {
 			dao_id: T::DaoId,
 		) -> Result<T::AccountId, DispatchError> {
 			let who = ensure_signed(o)?;
-			let concrete_id = Self::try_get_concrete_id(dao_id)?;
-			ensure!(who == concrete_id.into_account(), Error::<T>::BadOrigin);
+			let dao_id = Self::try_get_dao_account_id(dao_id)?;
+			ensure!(who == dao_id, Error::<T>::BadOrigin);
 			Ok(who)
 		}
 	}
