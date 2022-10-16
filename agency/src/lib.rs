@@ -33,7 +33,6 @@ use frame_support::{
 };
 pub use pallet::*;
 use primitives::{
-	constant::weight::DAOS_BASE_WEIGHT,
 	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
@@ -368,7 +367,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		/// Dispatch a proposal from a member using the `Member` origin.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::execute())]
 		pub fn execute(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -390,7 +389,7 @@ pub mod pallet {
 		}
 
 		/// Add a new proposal to either be voted on or executed directly.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::propose())]
 		pub fn propose(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -453,7 +452,7 @@ pub mod pallet {
 		}
 
 		/// Add an aye or nay vote for the sender to the given proposal.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::vote())]
 		pub fn vote(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -514,7 +513,7 @@ pub mod pallet {
 		}
 
 		/// Close a vote that is either approved, disapproved or whose voting period has ended.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::close())]
 		pub fn close(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -579,7 +578,7 @@ pub mod pallet {
 		/// call id:201
 		///
 		/// Disapprove a proposal, close, and remove it from the system, regardless of its current state.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::disapprove_proposal())]
 		pub fn disapprove_proposal(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -593,7 +592,7 @@ pub mod pallet {
 		/// call id:202
 		///
 		/// Set the length of time for voting on proposal.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::set_motion_duration())]
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -608,7 +607,7 @@ pub mod pallet {
 		/// call id:203
 		///
 		/// Set a cap on the number of agency proposals
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::set_max_proposals())]
 		pub fn set_max_proposals(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -623,7 +622,7 @@ pub mod pallet {
 		/// call id:204
 		///
 		/// Set the maximum number of members in the agency.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::set_max_members())]
 		pub fn set_max_members(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -638,7 +637,7 @@ pub mod pallet {
 		/// call id:205
 		///
 		/// Set origin for a specific call.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config<I>>::WeightInfo::set_ensure_origin_for_every_call())]
 		pub fn set_ensure_origin_for_every_call(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,

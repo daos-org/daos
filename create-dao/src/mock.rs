@@ -70,6 +70,7 @@ impl dao::Config for Test {
 	type DaoId = u64;
 	type ConcreteId = Nft<u64>;
 	type AfterCreate = ();
+	type WeightInfo = ();
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {

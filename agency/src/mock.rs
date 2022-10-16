@@ -72,6 +72,7 @@ impl dao::Config for Test {
 	type DaoId = u64;
 	type ConcreteId = Nft<u64>;
 	type AfterCreate = ();
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -93,6 +94,7 @@ impl agency::Config for Test {
 	type CollectiveBaseCallFilter = BaseCall;
 	type DefaultVote = agency::PrimeDefaultVote;
 	type MaxMembersForSystem = MaxMembersForSystem;
+	type WeightInfo = ();
 }
 
 

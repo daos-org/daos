@@ -71,11 +71,13 @@ impl dao::Config for Test {
 	type DaoId = u64;
 	type ConcreteId = Nft<u64>;
 	type AfterCreate = ();
+	type WeightInfo = ();
 }
 
 impl doas::Config for Test {
 	type Event = Event;
 	type DoAsOrigin = ();
+	type WeightInfo = ();
 }
 
 

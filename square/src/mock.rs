@@ -82,6 +82,7 @@ impl dao::Config for Test {
 	type DaoId = u64;
 	type ConcreteId = Nft<u64>;
 	type AfterCreate = ();
+	type WeightInfo = ();
 }
 
 #[derive(PartialEq, Eq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen, Default)]
@@ -108,6 +109,7 @@ impl square::Config for Test {
 	type Pledge = Vote;
 	type Conviction = ();
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {

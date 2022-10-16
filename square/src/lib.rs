@@ -30,7 +30,6 @@ pub use frame_support::{
 	BoundedVec, RuntimeDebug,
 };
 pub use pallet::*;
-use primitives::constant::weight::DAOS_BASE_WEIGHT;
 use scale_info::TypeInfo;
 pub use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{
@@ -389,7 +388,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// initiate a proposal.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::propose())]
 		pub fn propose(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -421,7 +420,7 @@ pub mod pallet {
 		}
 
 		/// Others support initiating proposals.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::second())]
 		pub fn second(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -444,7 +443,7 @@ pub mod pallet {
 		}
 
 		/// Open a referendum.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::open_table())]
 		pub fn open_table(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let tag = LaunchTag::<T>::get(dao_id);
@@ -463,7 +462,7 @@ pub mod pallet {
 		}
 
 		/// Vote for the referendum
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::vote_for_referendum())]
 		pub fn vote_for_referendum(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -523,7 +522,7 @@ pub mod pallet {
 		}
 
 		/// Cancel a vote on a referendum
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::cancel_vote())]
 		pub fn cancel_vote(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -577,7 +576,7 @@ pub mod pallet {
 		}
 
 		/// Vote and execute the transaction corresponding to the proposa
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::enact_proposal())]
 		pub fn enact_proposal(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -640,7 +639,7 @@ pub mod pallet {
 		}
 
 		/// Unlock
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::unlock())]
 		pub fn unlock(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let now = Self::now();
@@ -689,7 +688,7 @@ pub mod pallet {
 		/// call id:301
 		///
 		/// Set Origin for each Call.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_min_vote_weight_for_every_call())]
 		pub fn set_min_vote_weight_for_every_call(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -706,7 +705,7 @@ pub mod pallet {
 		/// call id:302
 		///
 		/// Set the maximum number of proposals at the same time
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_max_public_props())]
 		pub fn set_max_public_props(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -722,7 +721,7 @@ pub mod pallet {
 		/// call id:303
 		///
 		/// Set the referendum interval
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_launch_period())]
 		pub fn set_launch_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -738,7 +737,7 @@ pub mod pallet {
 		/// call id:304
 		///
 		/// Set the minimum amount a proposal needs to stake
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_minimum_deposit())]
 		pub fn set_minimum_deposit(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -754,7 +753,7 @@ pub mod pallet {
 		/// call id:305
 		///
 		/// Set the voting length of the referendum
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_voting_period())]
 		pub fn set_voting_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -770,7 +769,7 @@ pub mod pallet {
 		/// call id:306
 		///
 		/// Set the length of time that can be unreserved
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_rerserve_period())]
 		pub fn set_rerserve_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -786,7 +785,7 @@ pub mod pallet {
 		/// call id:307
 		///
 		/// Set the time to delay the execution of the proposal
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_enactment_period())]
 		pub fn set_enactment_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
