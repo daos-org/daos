@@ -23,9 +23,8 @@ pub use sp_std::{fmt::Debug, result};
 use weights::WeightInfo;
 #[cfg(test)]
 mod mock;
-//
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;

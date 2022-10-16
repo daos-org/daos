@@ -42,8 +42,8 @@ use sp_std::{marker::PhantomData, prelude::*, result};
 use weights::WeightInfo;
 #[cfg(test)]
 mod mock;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;
 pub mod traits;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
