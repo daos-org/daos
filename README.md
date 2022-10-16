@@ -21,6 +21,11 @@ We don't care about the implementation of your DAO's specific behavior, this can
 cd daos
 cargo build --release
 ```
+
+## License
+
+The project is made available under the [Apache2.0](./LICENSE-APACHE2)/[MIT](./LICENSE-MIT) license.
+
 ## Projects using daos
 * If you intend or are using daos, please add your project here  
 
