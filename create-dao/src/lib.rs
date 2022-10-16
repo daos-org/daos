@@ -39,11 +39,8 @@ pub use sp_std::{
 #[cfg(test)]
 pub mod mock;
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
-//
-// #[cfg(test)]
-// mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;

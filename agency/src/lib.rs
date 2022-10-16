@@ -49,9 +49,6 @@ pub mod traits;
 mod benchmarking;
 pub mod weights;
 
-// pub mod weights;
-// pub use weights::WeightInfo;
-
 /// Default voting strategy when a member is inactive.
 pub trait DefaultVote {
 	/// Get the default voting strategy, given:
