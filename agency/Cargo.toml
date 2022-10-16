@@ -29,6 +29,7 @@ pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'p
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
 dao = { path = "../create-dao", package = "daos-create-dao", default-features = false}
 daos-doas = {path = "../doas", default-features = false}
+sudo = {path = "../sudo", package = "daos-sudo", default-features = false }
 
 [features]
 default = ["std"]
@@ -46,6 +47,7 @@ std = [
 	"dao/std",
 	"daos-doas/std",
 	"pallet-balances/std",
+	"sudo/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

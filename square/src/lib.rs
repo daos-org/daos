@@ -46,10 +46,10 @@ pub type ReferendumIndex = u32;
 
 #[cfg(test)]
 mod mock;
-//
-// #[cfg(test)]
-// mod tests;
-//
+
+#[cfg(test)]
+mod tests;
+
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 pub mod weights;

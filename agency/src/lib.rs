@@ -42,15 +42,12 @@ use sp_std::{marker::PhantomData, prelude::*, result};
 use weights::WeightInfo;
 #[cfg(test)]
 mod mock;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;
 pub mod traits;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 pub mod weights;
-
-// pub mod weights;
-// pub use weights::WeightInfo;
 
 /// Default voting strategy when a member is inactive.
 pub trait DefaultVote {

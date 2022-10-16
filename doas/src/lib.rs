@@ -35,8 +35,8 @@ pub use sp_std::{fmt::Debug, result};
 #[cfg(test)]
 mod mock;
 pub mod weights;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
