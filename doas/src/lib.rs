@@ -24,7 +24,6 @@ pub use frame_support::{
 	Parameter,
 };
 pub use pallet::*;
-use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use primitives::{
 	traits::EnsureOriginWithArg,
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, RealCallId},
@@ -88,7 +87,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// The agency execute an external call
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::do_as_agency())]
 		pub fn do_as_agency(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,

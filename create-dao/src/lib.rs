@@ -23,7 +23,6 @@ pub use frame_support::{
 use weights::WeightInfo;
 pub use pallet::*;
 pub use primitives::{
-	constant::weight::DAOS_BASE_WEIGHT,
 	traits::{AfterCreate, BaseCallFilter, TryCreate},
 	types::RealCallId,
 	AccountIdConversion,
@@ -189,7 +188,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Create a DAO for a specific group
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(T::WeightInfo::create_dao())]
 		pub fn create_dao(
 			origin: OriginFor<T>,
 			concrete_id: T::ConcreteId,
@@ -229,7 +228,7 @@ pub mod pallet {
 		/// call id:101
 		///
 		/// dao remark something.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(T::WeightInfo::dao_remark())]
 		pub fn dao_remark(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,

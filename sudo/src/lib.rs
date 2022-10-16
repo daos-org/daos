@@ -18,7 +18,6 @@
 pub use dao::{self, BaseCallFilter};
 pub use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo};
 pub use pallet::*;
-use primitives::constant::weight::DAOS_BASE_WEIGHT;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
 use weights::WeightInfo;
@@ -82,7 +81,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Execute external transactions as root
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::sudo())]
 		pub fn sudo(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -105,7 +104,7 @@ pub mod pallet {
 		/// call id: 401
 		///
 		/// Set root account or reopen sudo.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_sudo_account())]
 		pub fn set_sudo_account(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -120,7 +119,7 @@ pub mod pallet {
 		/// call id: 402
 		///
 		/// delete root account.
-		#[pallet::weight(DAOS_BASE_WEIGHT)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::close_sudo())]
 		pub fn close_sudo(origin: OriginFor<T>, dao_id: T::DaoId) -> DispatchResultWithPostInfo {
 			let _sudo = Self::check_origin(dao_id, origin)?;
 			Account::<T>::take(dao_id);
