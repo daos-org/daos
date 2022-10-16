@@ -21,7 +21,7 @@ We don't care about the implementation of your DAO's specific behavior, this can
 cd daos
 cargo build --release
 ```
-
+## [Workflow](./document/workflow.md)
 ## License
 
 The project is made available under the [Apache2.0](./LICENSE-APACHE2)/[MIT](./LICENSE-MIT) license.
