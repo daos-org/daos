@@ -18,7 +18,7 @@ pub fn set_sudo() {
         dao_id: 0u64,
         sudo_account: ALICE,
     });
-    crate::Pallet::<Test>::sudo(Origin::signed(dao::Daos::<Test>::get(0u64).unwrap().dao_account_id), 0u64, Box::new(proposal));
+    crate::Pallet::<Test>::sudo(Origin::signed(dao::Daos::<Test>::get(0u64).unwrap().dao_account_id), 0u64, Box::new(proposal)).unwrap();
     assert_eq!(crate::Account::<Test>::get(0u64), Some(1u64));
 }
 
@@ -41,7 +41,7 @@ pub fn close_sudo_should_work() {
         let proposal = Call::Sudo(crate::Call::close_sudo {
             dao_id: 0u64,
         });
-        crate::Pallet::<Test>::sudo(Origin::signed(ALICE), 0u64, Box::new(proposal));
+        crate::Pallet::<Test>::sudo(Origin::signed(ALICE), 0u64, Box::new(proposal)).unwrap();
         assert_eq!(crate::Account::<Test>::get(0u64), None);
     });
 }

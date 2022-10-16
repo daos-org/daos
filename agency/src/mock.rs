@@ -24,7 +24,9 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		DAO: dao::{ Pallet, Call, Event<T>, Storage },
-		Agency: agency::{ Pallet, Call, Event<T>, Storage, Origin<T> }
+		Agency: agency::{ Pallet, Call, Event<T>, Storage, Origin<T> },
+		Sudo: sudo::{ Pallet, Call, Event<T>, Storage },
+		DoAs: daos_doas::{ Pallet, Call, Event<T>, Storage },
 	}
 );
 
@@ -97,6 +99,16 @@ impl agency::Config for Test {
 	type WeightInfo = ();
 }
 
+impl sudo::Config for Test {
+	type Event = Event;
+	type WeightInfo = ();
+}
+
+impl daos_doas::Config for Test {
+	type Event = Event;
+	type DoAsOrigin = ();
+	type WeightInfo = ();
+}
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let t = GenesisConfig { system: Default::default() }.build_storage().unwrap();
