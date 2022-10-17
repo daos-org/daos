@@ -1,4 +1,4 @@
-# ***Sudo Module***
+``# ***Sudo Module***
 ***
 ## Overview
 Sudo module can execute all external transactions that dao account can execute.
@@ -11,3 +11,4 @@ and can be removed later to achieve the decentralization of the DAO.
 * `sudo` Execute external transactions as root account.
 * `set_sudo_account` Set root account or reopen sudo.
 * `close_sudo` Delete root account, and achieve decentralization.
+``

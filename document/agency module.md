@@ -10,7 +10,7 @@ and the Agency executes the external transaction according to the Origin.
 ***
 ### For every call
 * `set_ensure_origin_for_every_call` Set origin for a specific call.
-### For basic parameters
+### For some Storage
 * `set_motion_duration` Set the length of time for voting on proposal.
 * `set_max_proposals` Set a cap on the number of agency's proposals.
 * `set_max_member` Set the maximum number of members in the agency.
