@@ -13,7 +13,7 @@ In this module, the minimum voting weight required for each external transaction
 ***
 ### For every call
 * `set_min_vote_weight_for_every_call` Set origin for a specific call.
-### For basic parameters
+### For some Storage
 * `set_max_public_props` Set the maximum number of proposals at the same time.
 * `set_launch_period` Set the referendum interval.
 * `set_minimum_deposit` Set the minimum amount a proposal needs to stake.
