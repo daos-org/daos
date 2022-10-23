@@ -1,7 +1,7 @@
 # daos
 
 ## Introduce
-We provide an abstraction layer to make it easier for each DAO to manage each related specific behavior, and how to quickly create a DAO based on daos.
+We provide an abstraction layer to make it easier for each DAO to manage each related specific transaction, and how to quickly create a DAO based on daos.
 ***
 * As a developer, you can just focus on the design of the DAO template, leave the governance rules to us.
 * As a user, you can create any number of daos for yourself based on the DAO template.
