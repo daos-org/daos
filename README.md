@@ -24,7 +24,7 @@ cargo build --release
 ## [Workflow](./document/workflow.md)
 ## License
 
-The project is made available under the [Apache2.0](./LICENSE-APACHE2)/[MIT](./LICENSE-MIT) license.
+The project is made available under the [Apache2.0](./LICENSE-APACHE2) license.
 
 ## Projects using daos
 * If you intend or are using daos, please add your project here  

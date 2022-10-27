@@ -26,7 +26,7 @@ pub mod ids;
 pub mod traits;
 pub mod types;
 
-/// This type can be converted into and possibly from an [`AccountId`] (which itself is generic).
+/// This type can be converted into an AccountId (which itself is generic).
 pub trait AccountIdConversion<AccountId>: Sized {
 	/// Convert into an account ID. This is infallible.
 	fn into_account(&self) -> AccountId;
