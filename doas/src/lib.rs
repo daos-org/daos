@@ -16,7 +16,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use codec::MaxEncodedLen;
-use weights::WeightInfo;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
@@ -31,12 +30,13 @@ pub use primitives::{
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
+use weights::WeightInfo;
 
 #[cfg(test)]
 mod mock;
-pub mod weights;
 #[cfg(test)]
 mod tests;
+pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;

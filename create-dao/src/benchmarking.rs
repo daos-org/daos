@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{Config, Pallet as Dao};
 use frame_benchmarking::{
@@ -18,9 +17,7 @@ fn creat_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
 	let alice = get_alice::<T>();
 	let dao_id = T::DaoId::default();
 	let second_id: T::ConcreteId = Default::default();
-	assert!(
-		Dao::<T>::create_dao(SystemOrigin::Signed(alice).into(), second_id, vec![1;4]).is_ok()
-	);
+	assert!(Dao::<T>::create_dao(SystemOrigin::Signed(alice).into(), second_id, vec![1; 4]).is_ok());
 	(dao_id, second_id)
 }
 

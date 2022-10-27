@@ -23,7 +23,7 @@ fn create_dao<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId) {
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(get_alice::<T, I>()).into(),
 		second_id,
-		vec![1;4],
+		vec![1; 4],
 	)
 	.is_ok());
 	CollectiveMembers::<T, I>::insert(
@@ -38,8 +38,8 @@ fn get_proposal<T: Config<I>, I: 'static>(dao_id: T::DaoId) -> (T::Proposal, T::
 	(proposal.clone(), T::Hashing::hash_of(&proposal))
 }
 
-
-fn create_proposal<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId, T::Hash, ProposalIndex) {
+fn create_proposal<T: Config<I>, I: 'static>() -> (T::DaoId, T::ConcreteId, T::Hash, ProposalIndex)
+{
 	let (dao_id, second_id) = create_dao::<T, I>();
 	let (proposal, proposal_hash) = get_proposal::<T, I>(dao_id);
 	assert!(Collective::<T, I>::propose(

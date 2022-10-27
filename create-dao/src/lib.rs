@@ -14,13 +14,13 @@
 // limitations under the License.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::type_complexity)]
 
 pub use codec::MaxEncodedLen;
 pub use frame_support::{
 	codec::{Decode, Encode},
 	traits::IsSubType,
 };
-use weights::WeightInfo;
 pub use pallet::*;
 pub use primitives::{
 	traits::{AfterCreate, BaseCallFilter, TryCreate},
@@ -35,12 +35,12 @@ pub use sp_std::{
 	prelude::{self, *},
 	result,
 };
+use weights::WeightInfo;
 
 #[cfg(test)]
 pub mod mock;
 #[cfg(test)]
 pub mod tests;
-
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -131,7 +131,6 @@ pub mod pallet {
 
 		/// Weight information for extrinsics in this pallet.
 		type WeightInfo: WeightInfo;
-
 	}
 
 	#[pallet::pallet]
@@ -209,10 +208,10 @@ pub mod pallet {
 				DaoInfo {
 					creator: creator.clone(),
 					start_block: now,
-					concrete_id: concrete_id.clone(),
+					concrete_id,
 					describe,
 					status: Status::Active,
-					dao_account_id: concrete_id.clone().into_account(),
+					dao_account_id: concrete_id.into_account(),
 				},
 			);
 			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
@@ -248,10 +247,7 @@ pub mod pallet {
 
 		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> result::Result<
-			DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
-			DispatchError,
-		> {
+		) -> Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}
@@ -273,7 +269,7 @@ pub mod pallet {
 		pub fn ensrue_dao_root(
 			o: OriginFor<T>,
 			dao_id: T::DaoId,
-		) -> Result<T::AccountId, DispatchError> {
+		) -> result::Result<T::AccountId, DispatchError> {
 			let who = ensure_signed(o)?;
 			let dao_id = Self::try_get_dao_account_id(dao_id)?;
 			ensure!(who == dao_id, Error::<T>::BadOrigin);

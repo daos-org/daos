@@ -1,14 +1,21 @@
 #![allow(dead_code)]
 use crate as square;
-use frame_system;
-use scale_info::TypeInfo;
-use codec::{Encode, Decode, MaxEncodedLen};
-use frame_support::{traits::{ConstU16, ConstU32, ConstU64}, RuntimeDebug};
-use sp_core::H256;
-use sp_runtime::{testing::Header, traits::{BlakeTwo256, IdentityLookup}, DispatchError};
-use primitives::ids::Nft;
-use sp_std::result::Result;
 use crate::Pledge;
+use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::{
+	traits::{ConstU16, ConstU32, ConstU64},
+	RuntimeDebug,
+};
+use frame_system;
+use primitives::ids::Nft;
+use scale_info::TypeInfo;
+use sp_core::H256;
+use sp_runtime::{
+	testing::Header,
+	traits::{BlakeTwo256, IdentityLookup},
+	DispatchError,
+};
+use sp_std::result::Result;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 pub type Block = frame_system::mocking::MockBlock<Test>;
@@ -58,7 +65,7 @@ impl TryFrom<Call> for u64 {
 	type Error = ();
 	fn try_from(call: Call) -> Result<Self, Self::Error> {
 		match call {
-			_ => Ok(0u64)
+			_ => Ok(0u64),
 		}
 	}
 }
@@ -85,7 +92,9 @@ impl dao::Config for Test {
 	type WeightInfo = ();
 }
 
-#[derive(PartialEq, Eq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen, Default)]
+#[derive(
+	PartialEq, Eq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen, Default,
+)]
 pub struct Vote(pub u64);
 
 impl Pledge<u64, u64, u64, (), u64, DispatchError> for Vote {
@@ -102,7 +111,6 @@ impl Pledge<u64, u64, u64, (), u64, DispatchError> for Vote {
 		Ok(())
 	}
 }
-
 
 impl square::Config for Test {
 	type Event = Event;

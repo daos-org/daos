@@ -19,19 +19,13 @@ const LaunchTime: u32 = 1000000;
 
 fn get_alice<T: Config>() -> T::AccountId {
 	let alice = account("alice", 1, 1);
-	T::Currency::deposit_creating(
-		&alice,
-		(100000 * DOLLARS).saturated_into::<BalanceOf<T>>(),
-	);
+	T::Currency::deposit_creating(&alice, (100000 * DOLLARS).saturated_into::<BalanceOf<T>>());
 	alice
 }
 
 fn get_dao_account<T: Config>(second_id: T::ConcreteId) -> T::AccountId {
 	let who = second_id.into_account();
-	T::Currency::deposit_creating(
-		&who,
-		(100000 * DOLLARS).saturated_into::<BalanceOf<T>>(),
-	);
+	T::Currency::deposit_creating(&who, (100000 * DOLLARS).saturated_into::<BalanceOf<T>>());
 	who
 }
 
@@ -42,7 +36,7 @@ fn creat_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(alice).into(),
 		second_id,
-		vec![1;4],
+		vec![1; 4],
 	)
 	.is_ok());
 	(dao_id, second_id)

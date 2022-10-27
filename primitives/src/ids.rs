@@ -42,11 +42,7 @@ impl Add<Self> for DaoId {
 
 impl CheckedAdd for DaoId {
 	fn checked_add(&self, v: &Self) -> Option<Self> {
-		if let Some(x) = self.0.checked_add(v.0) {
-			Some(DaoId(x))
-		} else {
-			None
-		}
+		self.0.checked_add(v.0).map(DaoId)
 	}
 }
 #[derive(Decode, Encode, Copy, Clone, Default, Debug, TypeInfo, MaxEncodedLen, Eq, PartialEq)]

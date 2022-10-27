@@ -23,7 +23,7 @@ fn create_dao<T: Config>() -> (T::DaoId, T::ConcreteId) {
 	assert!(dao::Pallet::<T>::create_dao(
 		SystemOrigin::Signed(get_alice::<T>()).into(),
 		second_id,
-		vec![1;4],
+		vec![1; 4],
 	)
 	.is_ok());
 	(dao_id, second_id)

@@ -91,7 +91,8 @@ pub mod pallet {
 			ensure!(concrete_id.contains(*call.clone()), dao::Error::<T>::InVailCall);
 
 			let res = call.dispatch_bypass_filter(
-				frame_system::RawOrigin::Signed(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?).into(),
+				frame_system::RawOrigin::Signed(dao::Pallet::<T>::try_get_dao_account_id(dao_id)?)
+					.into(),
 			);
 			Self::deposit_event(SudoDone {
 				sudo,
@@ -129,13 +130,18 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		fn check_origin(dao_id: T::DaoId, o: OriginFor<T>) -> result::Result<T::AccountId, DispatchError> {
+		fn check_origin(
+			dao_id: T::DaoId,
+			o: OriginFor<T>,
+		) -> result::Result<T::AccountId, DispatchError> {
 			if let Ok(who) = dao::Pallet::<T>::ensrue_dao_root(o.clone(), dao_id) {
 				Ok(who)
-			}
-			else {
+			} else {
 				let who = ensure_signed(o)?;
-				ensure!( who == Account::<T>::get(dao_id).ok_or(Error::<T>::RootNotExists)?, Error::<T>::NotSudo);
+				ensure!(
+					who == Account::<T>::get(dao_id).ok_or(Error::<T>::RootNotExists)?,
+					Error::<T>::NotSudo
+				);
 				Ok(who)
 			}
 		}

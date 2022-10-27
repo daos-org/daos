@@ -1,14 +1,14 @@
 #![allow(dead_code)]
 use crate as doas;
-use frame_system;
 use frame_support::traits::{ConstU16, ConstU32, ConstU64};
+use frame_system;
+use primitives::ids::Nft;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 	BuildStorage,
 };
-use primitives::ids::Nft;
 use sp_std::result::Result;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -58,11 +58,10 @@ impl TryFrom<Call> for u64 {
 	type Error = ();
 	fn try_from(call: Call) -> Result<Self, Self::Error> {
 		match call {
-			_ => Ok(0u64)
+			_ => Ok(0u64),
 		}
 	}
 }
-
 
 impl dao::Config for Test {
 	type Event = Event;
@@ -79,7 +78,6 @@ impl doas::Config for Test {
 	type DoAsOrigin = ();
 	type WeightInfo = ();
 }
-
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let t = GenesisConfig { system: Default::default() }.build_storage().unwrap();

@@ -21,6 +21,7 @@
 // the call can dispatch.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::type_complexity)]
 
 pub use codec::{Decode, Encode};
 use dao::{self, Hash, Vec};
@@ -52,8 +53,8 @@ mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-pub mod weights;
 pub mod traits;
+pub mod weights;
 
 /// Voting Statistics.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
@@ -429,14 +430,14 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			let mut deposit =
 				Self::deposit_of(dao_id, proposal).ok_or(Error::<T>::ProposalMissing)?;
-			let deposit_amount = deposit.1.clone();
+			let deposit_amount = deposit.1;
 			T::Currency::reserve(&who, deposit_amount)?;
 			deposit.0.push(who.clone());
 			<DepositOf<T>>::insert(dao_id, proposal, deposit);
 			let unreserved_block = Self::now()
 				.checked_add(&ReservePeriod::<T>::get(dao_id))
 				.ok_or(Error::<T>::Overflow)?;
-			ReserveOf::<T>::append(who.clone(), (deposit_amount, unreserved_block));
+			ReserveOf::<T>::append(who, (deposit_amount, unreserved_block));
 			Self::deposit_event(Event::<T>::Second(dao_id, deposit_amount));
 
 			Ok(().into())
@@ -591,10 +592,10 @@ pub mod pallet {
 				ReferendumInfo::Ongoing(x) =>
 					if x.end > now {
 						return Err(Error::<T>::VoteNotEnd)?
+					} else if x.end.saturating_add(x.delay) > now {
+						return Err(Error::<T>::InDelayTime)?
 					} else {
-						if x.end.saturating_add(x.delay) > now {
-							return Err(Error::<T>::InDelayTime)?
-						} else {
+						{
 							let call_id: T::CallId =
 								TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone())
 									.unwrap_or_default();
@@ -664,19 +665,15 @@ pub mod pallet {
 			{
 				let mut votes = VotesOf::<T>::get(&who);
 				votes.retain(|h| {
-					if h.unlock_block > now {
+					if h.unlock_block > now || h.pledge.vote_end_do(&who, &h.dao_id).is_err() {
 						true
 					} else {
-						if h.pledge.vote_end_do(&who, &h.dao_id).is_err() {
-							true
-						} else {
-							Self::deposit_event(Event::<T>::Unlock(
-								who.clone(),
-								h.concrete_id.clone(),
-								h.pledge,
-							));
-							false
-						}
+						Self::deposit_event(Event::<T>::Unlock(
+							who.clone(),
+							h.concrete_id,
+							h.pledge,
+						));
+						false
 					}
 				});
 				VotesOf::<T>::insert(&who, votes);
@@ -816,7 +813,7 @@ impl<T: Config> Pallet<T> {
 			let (prop_index, _, proposal, _) = public_props.swap_remove(winner_index);
 			<PublicProps<T>>::insert(dao_id, public_props);
 
-			if let Some(_) = <DepositOf<T>>::take(dao_id, prop_index) {
+			if <DepositOf<T>>::take(dao_id, prop_index).is_some() {
 				Ok(Self::inject_referendum(
 					dao_id,
 					now.saturating_add(VotingPeriod::<T>::get(dao_id)),

@@ -23,7 +23,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
 
-use dao;
 use frame_support::{
 	codec::{Decode, Encode},
 	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
@@ -40,13 +39,13 @@ pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
 use weights::WeightInfo;
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
 mod tests;
 pub mod traits;
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
 pub mod weights;
 
 /// Default voting strategy when a member is inactive.
@@ -372,7 +371,10 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+				ensure!(
+					T::CollectiveBaseCallFilter::contains(&proposal),
+					dao::Error::<T>::InVailCall
+				);
 			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
@@ -395,7 +397,10 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				ensure!(T::CollectiveBaseCallFilter::contains(&proposal), dao::Error::<T>::InVailCall);
+				ensure!(
+					T::CollectiveBaseCallFilter::contains(&proposal),
+					dao::Error::<T>::InVailCall
+				);
 			}
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
@@ -418,7 +423,7 @@ pub mod pallet {
 
 				Ok(().into())
 			} else {
-				let _ = <Proposals<T, I>>::try_mutate(dao_id, |proposals| -> DispatchResult {
+				<Proposals<T, I>>::try_mutate(dao_id, |proposals| -> DispatchResult {
 					proposals.push(proposal_hash);
 					ensure!(
 						proposals.len() as u32 <= MaxProposals::<T, I>::get(dao_id),
@@ -467,9 +472,6 @@ pub mod pallet {
 			let position_yes = voting.ayes.iter().position(|a| a == &who);
 			let position_no = voting.nays.iter().position(|a| a == &who);
 
-			// Detects first vote of the member in the motion
-			let is_account_voting_first_time = position_yes.is_none() && position_no.is_none();
-
 			if approve {
 				if position_yes.is_none() {
 					voting.ayes.push(who.clone());
@@ -502,11 +504,7 @@ pub mod pallet {
 
 			Voting::<T, I>::insert(dao_id, &proposal, voting);
 
-			if is_account_voting_first_time {
-				Ok(().into())
-			} else {
-				Ok(().into())
-			}
+			Ok(().into())
 		}
 
 		/// Close a vote that is either approved, disapproved or whose voting period has ended.
@@ -677,7 +675,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		// Note: The dispatchables *do not* use this to check membership so make sure
 		// to update those if this is changed.
 		let members = Self::collective_members(dao_id);
-		Ok(members.contains(&who))
+		Ok(members.contains(who))
 	}
 
 	/// Ensure that the right proposal bounds were passed and get the proposal from storage.

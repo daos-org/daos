@@ -43,7 +43,7 @@ pub trait ChangeMembers<AccountId: Clone + Ord, DaoId: Clone + Default + Copy> {
 	/// This resets any previous value of prime.
 	fn set_members_sorted(dao_id: DaoId, new_members: &[AccountId], old_members: &[AccountId]) {
 		let (incoming, outgoing) = Self::compute_members_diff_sorted(new_members, old_members);
-		Self::change_members_sorted(dao_id, &incoming[..], &outgoing[..], &new_members);
+		Self::change_members_sorted(dao_id, &incoming[..], &outgoing[..], new_members);
 	}
 
 	/// Compute diff between new and old members; they **must already be sorted**.

@@ -1,4 +1,3 @@
-
 use super::*;
 use sp_runtime::DispatchError;
 
@@ -74,7 +73,9 @@ impl<OuterOrigin: Clone, Argument: Clone> EnsureOriginWithArg<OuterOrigin, Argum
 	}
 }
 
-impl<AccountId: Clone + Ord, DaoId: Default + Clone, Id: Clone> TryCreate<AccountId, DaoId, DispatchError> for ids::Nft<Id> {
+impl<AccountId: Clone + Ord, DaoId: Default + Clone, Id: Clone>
+	TryCreate<AccountId, DaoId, DispatchError> for ids::Nft<Id>
+{
 	fn try_create(&self, _who: AccountId, _dao_id: DaoId) -> Result<(), DispatchError> {
 		Ok(())
 	}
