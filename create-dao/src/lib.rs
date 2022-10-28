@@ -54,12 +54,6 @@ pub enum Status {
 	InActive,
 }
 
-impl Default for Status {
-	fn default() -> Self {
-		Status::Active
-	}
-}
-
 /// DAO specific information
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
@@ -180,9 +174,6 @@ pub mod pallet {
 		Overflow,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Create a DAO for a specific group
@@ -195,13 +186,8 @@ pub mod pallet {
 			let creator = ensure_signed(origin)?;
 
 			ensure!(describe.len() <= 50, Error::<T>::DescribeTooLong);
-
 			let dao_id = NextDaoId::<T>::get();
-
-			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
-				concrete_id.try_create(creator.clone(), dao_id)?;
-			}
-
+			concrete_id.try_create(creator.clone(), dao_id)?;
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
@@ -216,9 +202,7 @@ pub mod pallet {
 			);
 			let next_id = dao_id.checked_add(&One::one()).ok_or(Error::<T>::Overflow)?;
 			NextDaoId::<T>::put(next_id);
-
 			T::AfterCreate::do_something(creator.clone(), dao_id);
-
 			Self::deposit_event(Event::CreatedDao(creator, dao_id, concrete_id));
 			Ok(().into())
 		}

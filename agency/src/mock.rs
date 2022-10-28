@@ -1,11 +1,12 @@
 #![allow(dead_code)]
 use crate as agency;
 use frame_support::{
-	parameter_types,
+	debug, parameter_types,
+	sp_tracing::debug,
 	traits::{ConstU16, ConstU32, ConstU64, Contains},
 };
 use frame_system;
-use primitives::{ids::Nft, types::MemberCount};
+use primitives::{ids::Nft, traits::BaseCallFilter, types::MemberCount};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -68,6 +69,23 @@ impl TryFrom<Call> for u64 {
 	}
 }
 
+impl BaseCallFilter<Call> for Nft<u64> {
+	fn contains(&self, call: Call) -> bool {
+		match call {
+			Call::DoAs(_) => {
+				#[cfg(test)]
+				println!("doas funcs");
+				false
+			},
+			_ => {
+				#[cfg(test)]
+				println!("not doas funcs");
+				true
+			},
+		}
+	}
+}
+
 impl dao::Config for Test {
 	type Event = Event;
 	type Call = Call;
@@ -79,7 +97,7 @@ impl dao::Config for Test {
 }
 
 parameter_types! {
-	pub const MaxMembersForSystem: MemberCount = 2;
+	pub const MaxMembersForSystem: MemberCount = 4;
 }
 
 pub struct BaseCall;

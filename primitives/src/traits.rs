@@ -77,12 +77,16 @@ impl<AccountId: Clone + Ord, DaoId: Default + Clone, Id: Clone>
 	TryCreate<AccountId, DaoId, DispatchError> for ids::Nft<Id>
 {
 	fn try_create(&self, _who: AccountId, _dao_id: DaoId) -> Result<(), DispatchError> {
-		Ok(())
+		if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+			todo!()
+		} else {
+			Ok(())
+		}
 	}
 }
 
-impl<Call: Clone, Id: Default> BaseCallFilter<Call> for ids::Nft<Id> {
-	fn contains(&self, _call: Call) -> bool {
-		true
-	}
-}
+// impl<Call: Clone, Id: Default> BaseCallFilter<Call> for ids::Nft<Id> {
+// 	fn contains(&self, _call: Call) -> bool {
+// 		true
+// 	}
+// }

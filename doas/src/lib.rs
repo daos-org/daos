@@ -81,9 +81,6 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// The agency execute an external call

@@ -74,12 +74,6 @@ pub enum Opinion {
 	NAYS,
 }
 
-impl Default for Opinion {
-	fn default() -> Self {
-		Self::AYES
-	}
-}
-
 /// Information about individual votes.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 pub struct VoteInfo<DaoId, ConcreteId, Pledge, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
@@ -383,9 +377,6 @@ pub mod pallet {
 		PledgeNotEnough,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// initiate a proposal.
@@ -540,22 +531,20 @@ pub mod pallet {
 						if x.end > now {
 							let mut votes = VotesOf::<T>::get(&who);
 							votes.retain(|h| {
-								if h.referendum_index == index {
-									if h.pledge.vote_end_do(&who, &dao_id).is_err() {
-										true
-									} else {
-										match h.opinion {
-											Opinion::NAYS => {
-												x.tally.nays =
-													x.tally.nays.saturating_sub(h.vote_weight);
-											},
-											_ => {
-												x.tally.ayes =
-													x.tally.ayes.saturating_sub(h.vote_weight);
-											},
-										};
-										false
-									}
+								if h.referendum_index == index &&
+									h.pledge.vote_end_do(&who, &dao_id).is_ok()
+								{
+									match h.opinion {
+										Opinion::NAYS => {
+											x.tally.nays =
+												x.tally.nays.saturating_sub(h.vote_weight);
+										},
+										_ => {
+											x.tally.ayes =
+												x.tally.ayes.saturating_sub(h.vote_weight);
+										},
+									};
+									false
 								} else {
 									true
 								}

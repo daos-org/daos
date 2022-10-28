@@ -2,7 +2,7 @@
 use crate as doas;
 use frame_support::traits::{ConstU16, ConstU32, ConstU64};
 use frame_system;
-use primitives::ids::Nft;
+use primitives::{ids::Nft, traits::BaseCallFilter};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -59,6 +59,15 @@ impl TryFrom<Call> for u64 {
 	fn try_from(call: Call) -> Result<Self, Self::Error> {
 		match call {
 			_ => Ok(0u64),
+		}
+	}
+}
+
+impl BaseCallFilter<Call> for Nft<u64> {
+	fn contains(&self, call: Call) -> bool {
+		match call {
+			Call::DoAs(_) => false,
+			_ => true,
 		}
 	}
 }

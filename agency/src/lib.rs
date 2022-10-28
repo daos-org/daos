@@ -108,15 +108,6 @@ pub enum RawOrigin<DaoId, I> {
 	_Phantom(PhantomData<I>),
 }
 
-impl<AccountId, I> GetBacking for RawOrigin<AccountId, I> {
-	fn get_backing(&self) -> Option<Backing> {
-		match self {
-			RawOrigin::Members(_dao_id, n, d) => Some(Backing { approvals: *n, eligible: *d }),
-			_ => None,
-		}
-	}
-}
-
 /// Info for keeping track of a motion being voted on.
 #[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct Votes<AccountId, BlockNumber> {
@@ -357,6 +348,7 @@ pub mod pallet {
 		ProportionErr,
 		/// Threshold exceeds the number of people
 		ThresholdWrong,
+		ThresholdTooLow,
 	}
 
 	// Note that councillor operations are assigned to the operational class.
@@ -370,7 +362,7 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks")) {
 				ensure!(
 					T::CollectiveBaseCallFilter::contains(&proposal),
 					dao::Error::<T>::InVailCall
@@ -396,12 +388,13 @@ pub mod pallet {
 			proposal: Box<<T as Config<I>>::Proposal>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			if !cfg!(any(feature = "std", feature = "runtime-benchmarks", test)) {
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks")) {
 				ensure!(
 					T::CollectiveBaseCallFilter::contains(&proposal),
 					dao::Error::<T>::InVailCall
 				);
 			}
+			ensure!(threshold > 1 as MemberCount, Error::<T, I>::ThresholdTooLow);
 			ensure!(Self::is_member(dao_id, &who)?, Error::<T, I>::NotMember);
 			let proposal_hash = T::Hashing::hash_of(&proposal);
 			ensure!(
@@ -413,44 +406,33 @@ pub mod pallet {
 				Self::collective_members(dao_id).len() as u32 >= threshold,
 				Error::<T, I>::ThresholdWrong
 			);
-			if threshold < 2 {
-				let seats = Self::collective_members(dao_id).len() as MemberCount;
-				let result = proposal.dispatch(RawOrigin::Members(dao_id, 1, seats).into());
-				Self::deposit_event(Event::Executed {
-					proposal_hash,
-					result: result.map(|_| ()).map_err(|e| e.error),
-				});
+			<Proposals<T, I>>::try_mutate(dao_id, |proposals| -> DispatchResult {
+				proposals.push(proposal_hash);
+				ensure!(
+					proposals.len() as u32 <= MaxProposals::<T, I>::get(dao_id),
+					Error::<T, I>::WrongProposalLength
+				);
+				Ok(())
+			})?;
 
-				Ok(().into())
-			} else {
-				<Proposals<T, I>>::try_mutate(dao_id, |proposals| -> DispatchResult {
-					proposals.push(proposal_hash);
-					ensure!(
-						proposals.len() as u32 <= MaxProposals::<T, I>::get(dao_id),
-						Error::<T, I>::WrongProposalLength
-					);
-					Ok(())
-				})?;
+			let index = Self::proposal_count(dao_id);
+			<ProposalCount<T, I>>::mutate(dao_id, |i| *i += 1);
+			<ProposalOf<T, I>>::insert(dao_id, proposal_hash, *proposal);
+			let votes = {
+				let end =
+					frame_system::Pallet::<T>::block_number() + MotionDuration::<T, I>::get(dao_id);
+				Votes { index, threshold, ayes: vec![who.clone()], nays: vec![], end }
+			};
+			<Voting<T, I>>::insert(dao_id, proposal_hash, votes);
 
-				let index = Self::proposal_count(dao_id);
-				<ProposalCount<T, I>>::mutate(dao_id, |i| *i += 1);
-				<ProposalOf<T, I>>::insert(dao_id, proposal_hash, *proposal);
-				let votes = {
-					let end = frame_system::Pallet::<T>::block_number() +
-						MotionDuration::<T, I>::get(dao_id);
-					Votes { index, threshold, ayes: vec![who.clone()], nays: vec![], end }
-				};
-				<Voting<T, I>>::insert(dao_id, proposal_hash, votes);
+			Self::deposit_event(Event::Proposed {
+				account: who,
+				proposal_index: index,
+				proposal_hash,
+				threshold,
+			});
 
-				Self::deposit_event(Event::Proposed {
-					account: who,
-					proposal_index: index,
-					proposal_hash,
-					threshold,
-				});
-
-				Ok(().into())
-			}
+			Ok(().into())
 		}
 
 		/// Add an aye or nay vote for the sender to the given proposal.

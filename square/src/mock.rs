@@ -7,7 +7,7 @@ use frame_support::{
 	RuntimeDebug,
 };
 use frame_system;
-use primitives::ids::Nft;
+use primitives::{ids::Nft, traits::BaseCallFilter};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::{
@@ -67,6 +67,11 @@ impl TryFrom<Call> for u64 {
 		match call {
 			_ => Ok(0u64),
 		}
+	}
+}
+impl BaseCallFilter<Call> for Nft<u64> {
+	fn contains(&self, call: Call) -> bool {
+		true
 	}
 }
 

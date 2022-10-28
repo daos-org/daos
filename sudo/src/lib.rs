@@ -74,9 +74,6 @@ pub mod pallet {
 		RootNotExists,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Execute external transactions as root

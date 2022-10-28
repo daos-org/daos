@@ -23,7 +23,8 @@ impl Default for Proportion<MemberCount> {
 	}
 }
 
-#[derive(PartialEq, Encode, Decode, RuntimeDebug, Clone, TypeInfo, Copy, MaxEncodedLen)]
+#[cfg_attr(any(feature = "std", test), derive(Debug))]
+#[derive(PartialEq, Encode, Decode, Clone, TypeInfo, Copy, MaxEncodedLen)]
 pub enum DoAsEnsureOrigin<Pro, C> {
 	Proportion(Pro),
 	Member,
