@@ -187,7 +187,11 @@ pub mod pallet {
 
 			ensure!(describe.len() <= 50, Error::<T>::DescribeTooLong);
 			let dao_id = NextDaoId::<T>::get();
-			concrete_id.try_create(creator.clone(), dao_id)?;
+
+			if !cfg!(any(feature = "std", feature = "runtime-benchmarks")) {
+				concrete_id.try_create(creator.clone(), dao_id)?;
+			}
+
 			let now = frame_system::Pallet::<T>::current_block_number();
 			Daos::<T>::insert(
 				dao_id,
