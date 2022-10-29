@@ -42,7 +42,8 @@ pub fn close_sudo_should_work() {
 	new_test_ext().execute_with(|| {
 		set_sudo();
 		let proposal = Call::Sudo(crate::Call::close_sudo { dao_id: 0u64 });
-		crate::Pallet::<Test>::sudo(Origin::signed(ALICE), 0u64, Box::new(proposal)).unwrap();
+		assert!(crate::Pallet::<Test>::sudo(Origin::signed(2), 0u64, Box::new(proposal.clone())).is_err());
+		assert_ok!(crate::Pallet::<Test>::sudo(Origin::signed(ALICE), 0u64, Box::new(proposal.clone())));
 		assert_eq!(crate::Account::<Test>::get(0u64), None);
 	});
 }

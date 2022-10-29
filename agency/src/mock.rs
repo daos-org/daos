@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 use crate as agency;
 use frame_support::{
 	debug, parameter_types,

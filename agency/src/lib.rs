@@ -27,7 +27,7 @@ use frame_support::{
 	codec::{Decode, Encode},
 	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
 	ensure,
-	traits::{Backing, Get, GetBacking, StorageVersion},
+	traits::{Get, StorageVersion},
 	weights::{GetDispatchInfo, Weight},
 };
 pub use pallet::*;

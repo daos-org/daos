@@ -22,6 +22,7 @@ pub fn set_members() {
 	crate::CollectiveMembers::<Test>::insert(0u64, vec![ALICE, 2u64, 3u64, 4u64])
 }
 
+
 pub fn set_sudo() {
 	create_dao();
 	set_members();

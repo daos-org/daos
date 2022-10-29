@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 use crate as square;
 use crate::Pledge;
 use codec::{Decode, Encode, MaxEncodedLen};
@@ -30,6 +31,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		DAO: dao::{ Pallet, Call, Event<T>, Storage },
+		Sudo: sudo::{ Pallet, Call, Event<T>, Storage },
 		Square: square::{ Pallet, Call, Event<T>, Storage },
 	}
 );
@@ -122,6 +124,11 @@ impl square::Config for Test {
 	type Pledge = Vote;
 	type Conviction = ();
 	type Currency = Balances;
+	type WeightInfo = ();
+}
+
+impl sudo::Config for Test {
+	type Event = Event;
 	type WeightInfo = ();
 }
 

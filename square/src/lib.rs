@@ -23,6 +23,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::type_complexity)]
 
+extern crate core;
+
 pub use codec::{Decode, Encode};
 use dao::{self, Hash, Vec};
 use frame_support::dispatch::{DispatchResult as DResult, UnfilteredDispatchable};
@@ -803,18 +805,15 @@ impl<T: Config> Pallet<T> {
 			<PublicProps<T>>::insert(dao_id, public_props);
 
 			if <DepositOf<T>>::take(dao_id, prop_index).is_some() {
-				Ok(Self::inject_referendum(
+				return Ok(Self::inject_referendum(
 					dao_id,
 					now.saturating_add(VotingPeriod::<T>::get(dao_id)),
 					proposal,
 					EnactmentPeriod::<T>::get(dao_id),
-				))
-			} else {
-				Err(Error::<T>::NoneWaiting)?
+				));
 			}
-		} else {
-			Err(Error::<T>::NoneWaiting)?
 		}
+		Err(Error::<T>::NoneWaiting)?
 	}
 
 	fn inject_referendum(

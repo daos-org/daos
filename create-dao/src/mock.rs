@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 use crate as dao;
 use frame_support::traits::{ConstU16, ConstU32, ConstU64};
 use frame_system;
