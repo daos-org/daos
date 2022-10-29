@@ -21,6 +21,16 @@ We provide an abstraction layer to make it easier for each DAO to manage each re
 cd daos
 cargo build --release
 ```
+* Test
+```asm
+cargo test
+```
+If you want to see the test coverage report
+```asm
+cargo install cargo-tarpaulin
+cargo tarpaulin --out html --run-types Tests
+```
+
 ## [Workflow](./document/workflow.md)
 ## License
 
