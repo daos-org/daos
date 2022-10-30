@@ -16,6 +16,21 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::type_complexity)]
 
+//! # Create DAO Module
+//!
+//! ## Module Introduction
+//! Create the DAO for a specific group.
+//!
+//! Users are free to create their own DAOs according to the requirements of the DAO template.
+//!
+//! Therefore, developers should create a DAO template in advance, which determines which users are members of the DAO
+//! and which transactions can be executed by this type of DAO.
+//!
+//! ## How to create a DAO template
+//! As a developer, if you don't know how to create a DAO template, you can refer to the code linked below, this is a vault DAO template of the kico project.
+//! * [Vault Module](https://github.com/DICO-TEAM/dico-chain/blob/main/pallets/vc/src/lib.rs)
+//! * [How to use daos for Vault Module](https://github.com/DICO-TEAM/dico-chain/blob/main/runtime/tico/src/vc.rs)
+
 pub use codec::MaxEncodedLen;
 pub use frame_support::{
 	codec::{Decode, Encode},

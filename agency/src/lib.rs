@@ -23,6 +23,35 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
 
+//! # Agency Module
+//!
+//! ## Module Introduction
+//! Agency module is the power agency in DAO, it can handle things that need to be decided quickly and efficiently.
+//! Also, this module provides a method `set_ensure_origin_for_every_call` to set the Origin for each external transaction,
+//! and the Agency executes the external transaction according to the Origin.
+//!
+//! Note that this module can only indirectly call external transactions through the doas module,
+//! so whether it is the `execute` or `propose` function in the module, the value of the proposal parameter should be the `do_as_agency method`.
+//! The `do_as_agency` method is a method in the doas module.
+//!
+//! Below is a test code case that calls the set_max_members method.
+//! ```
+//! let set_max_members =
+//! 			Call::Agency(crate::Call::set_max_members { dao_id: 0u64, max: 100u32 });
+//!
+//! let do_as_agency = Call::DoAs(daos_doas::Call::do_as_agency {
+//! 			dao_id: 0u64,
+//! 			call: Box::new(set_max_members),
+//! 		});
+//!
+//! assert!(crate::Pallet::<Test>::execute(
+//! 			Origin::signed(ALICE),
+//! 			0u64,
+//! 			Box::new(do_as_agency_fail)
+//! 		)
+//! 		.is_ok());
+//! ```
+
 use frame_support::{
 	codec::{Decode, Encode},
 	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},

@@ -15,6 +15,30 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+//! # DoAs Module
+//!
+//! ## Module Introduction
+//! The agency must go through the DoAs module `do_as_agency` to `execute` or `propose` external transactions.
+//! In other words, the proposal in the Agency module must be `do_as_agency`.
+//!
+//! Below is a test code case that agency calls the `set_max_members` method.
+//! ```
+//! let set_max_members =
+//! 			Call::Agency(crate::Call::set_max_members { dao_id: 0u64, max: 100u32 });
+//!
+//! let do_as_agency = Call::DoAs(daos_doas::Call::do_as_agency {
+//! 			dao_id: 0u64,
+//! 			call: Box::new(set_max_members),
+//! 		});
+//!
+//! assert!(crate::Pallet::<Test>::execute(
+//! 			Origin::signed(ALICE),
+//! 			0u64,
+//! 			Box::new(do_as_agency_fail)
+//! 		)
+//! 		.is_ok());
+//! ```
+
 pub use codec::MaxEncodedLen;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{
