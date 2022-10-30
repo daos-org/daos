@@ -48,7 +48,7 @@
 //! assert!(crate::Pallet::<Test>::execute(
 //! 			Origin::signed(ALICE),
 //! 			0u64,
-//! 			Box::new(do_as_agency_fail)
+//! 			Box::new(do_as_agency)
 //! 		)
 //! 		.is_ok());
 //! ***
