@@ -22,6 +22,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
+#![allow(clippy::tabs_in_doc_comments)]
 
 //! # Agency Module
 //!
