@@ -35,8 +35,8 @@
 //! so whether it is the `execute` or `propose` function in the module, the value of the proposal parameter should be the `do_as_agency method`.
 //! The `do_as_agency` method is a method in the doas module.
 //!
-//! Below is a test code case that calls the set_max_members method.
-//! ```
+//! Below is a test code case that agency calls the `set_max_members` method.
+//! ***
 //! let set_max_members =
 //! 			Call::Agency(crate::Call::set_max_members { dao_id: 0u64, max: 100u32 });
 //!
@@ -51,7 +51,8 @@
 //! 			Box::new(do_as_agency_fail)
 //! 		)
 //! 		.is_ok());
-//! ```
+//! ***
+
 
 use frame_support::{
 	codec::{Decode, Encode},

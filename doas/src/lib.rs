@@ -23,7 +23,7 @@
 //! In other words, the proposal in the Agency module must be `do_as_agency`.
 //!
 //! Below is a test code case that agency calls the `set_max_members` method.
-//! ```
+//! ***
 //! let set_max_members =
 //! 			Call::Agency(crate::Call::set_max_members { dao_id: 0u64, max: 100u32 });
 //!
@@ -38,7 +38,8 @@
 //! 			Box::new(do_as_agency_fail)
 //! 		)
 //! 		.is_ok());
-//! ```
+//! ***
+
 
 pub use codec::MaxEncodedLen;
 use dao::{self, BaseCallFilter};
