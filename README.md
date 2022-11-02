@@ -34,6 +34,13 @@ cargo tarpaulin --out html --run-types Tests
 ```asm
 cargo doc --open
 ```
+## Benchmarking
+```asm
+git clone https://github.com/DICO-TEAM/dico-chain.git
+cd dico-chain
+./scripts/daos_benchmarkall.sh
+```
+
 ## [Workflow](./document/workflow.md)
 ## License
 
