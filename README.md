@@ -38,7 +38,7 @@ cargo doc --open
 ```asm
 git clone https://github.com/DICO-TEAM/dico-chain.git
 cd dico-chain
-./scripts/daos_benchmarkall.sh
+./scripts/daos_benchmarkall.shdia
 ```
 
 ## [Workflow](./document/workflow.md)
