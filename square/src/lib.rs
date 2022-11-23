@@ -138,7 +138,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// What to stake when voting in a referendum.
 		type Pledge: Clone
 			+ Default
@@ -244,7 +244,7 @@ pub mod pallet {
 		_,
 		Identity,
 		T::DaoId,
-		Vec<(PropIndex, T::Hash, <T as dao::Config>::Call, T::AccountId)>,
+		Vec<(PropIndex, T::Hash, <T as dao::Config>::RuntimeCall, T::AccountId)>,
 		ValueQuery,
 	>;
 
@@ -277,7 +277,7 @@ pub mod pallet {
 		T::DaoId,
 		Identity,
 		ReferendumIndex,
-		ReferendumInfo<T::BlockNumber, <T as dao::Config>::Call, BalanceOf<T>>,
+		ReferendumInfo<T::BlockNumber, <T as dao::Config>::RuntimeCall, BalanceOf<T>>,
 	>;
 
 	/// Number of referendums so far.
@@ -393,7 +393,7 @@ pub mod pallet {
 		pub fn propose(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			proposal: Box<<T as dao::Config>::Call>,
+			proposal: Box<<T as dao::Config>::RuntimeCall>,
 			#[pallet::compact] value: BalanceOf<T>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
@@ -595,7 +595,7 @@ pub mod pallet {
 					} else {
 						{
 							let call_id: T::CallId =
-								TryFrom::<<T as dao::Config>::Call>::try_from(x.proposal.clone())
+								TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(x.proposal.clone())
 									.unwrap_or_default();
 
 							if x.tally.ayes.saturating_add(x.tally.nays) >=
@@ -826,7 +826,7 @@ impl<T: Config> Pallet<T> {
 	fn inject_referendum(
 		dao_id: T::DaoId,
 		end: T::BlockNumber,
-		proposal: <T as dao::Config>::Call,
+		proposal: <T as dao::Config>::RuntimeCall,
 		delay: T::BlockNumber,
 	) -> ReferendumIndex {
 		let ref_index = Self::referendum_count(dao_id);

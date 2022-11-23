@@ -56,18 +56,14 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSquare MaxPublicProps (r:1 w:0)
             // Storage: DaoSquare DepositOf (r:0 w:1)
         fn propose() -> Weight {
-        (44_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(6 as Weight))
-            .saturating_add(T::DbWeight::get().writes(4 as Weight))
+            Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare DepositOf (r:1 w:1)
             // Storage: System Account (r:1 w:1)
             // Storage: DaoSquare ReservePeriod (r:1 w:0)
             // Storage: DaoSquare ReserveOf (r:1 w:1)
         fn second() -> Weight {
-        (33_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(4 as Weight))
-            .saturating_add(T::DbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare LaunchTag (r:1 w:0)
             // Storage: CreateDao Daos (r:1 w:0)
@@ -79,88 +75,64 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSquare ReferendumCount (r:1 w:1)
             // Storage: DaoSquare ReferendumInfoOf (r:0 w:1)
         fn open_table() -> Weight {
-        (37_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(8 as Weight))
-            .saturating_add(T::DbWeight::get().writes(4 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn vote_for_referendum() -> Weight {
-        (24_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(3 as Weight))
-            .saturating_add(T::DbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn cancel_vote() -> Weight {
-        (22_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: DaoSquare MinVoteWeightOf (r:1 w:0)
             // Storage: CreateDao Daos (r:1 w:0)
         fn enact_proposal() -> Weight {
-        (25_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(3 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReserveOf (r:1 w:1)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn unlock() -> Weight {
-        (24_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MinVoteWeightOf (r:0 w:1)
         fn set_min_vote_weight_for_every_call() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MaxPublicProps (r:0 w:1)
         fn set_max_public_props() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare LaunchPeriod (r:0 w:1)
         fn set_launch_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MinimumDeposit (r:0 w:1)
         fn set_minimum_deposit() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare VotingPeriod (r:0 w:1)
         fn set_voting_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare ReservePeriod (r:0 w:1)
         fn set_rerserve_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare EnactmentPeriod (r:0 w:1)
         fn set_enactment_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
     }
 
@@ -174,18 +146,14 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSquare MaxPublicProps (r:1 w:0)
             // Storage: DaoSquare DepositOf (r:0 w:1)
         fn propose() -> Weight {
-        (44_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(6 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(4 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare DepositOf (r:1 w:1)
             // Storage: System Account (r:1 w:1)
             // Storage: DaoSquare ReservePeriod (r:1 w:0)
             // Storage: DaoSquare ReserveOf (r:1 w:1)
         fn second() -> Weight {
-        (33_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(4 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare LaunchTag (r:1 w:0)
             // Storage: CreateDao Daos (r:1 w:0)
@@ -197,87 +165,63 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSquare ReferendumCount (r:1 w:1)
             // Storage: DaoSquare ReferendumInfoOf (r:0 w:1)
         fn open_table() -> Weight {
-        (37_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(8 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(4 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn vote_for_referendum() -> Weight {
-        (24_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(3 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn cancel_vote() -> Weight {
-        (22_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReferendumInfoOf (r:1 w:1)
             // Storage: DaoSquare MinVoteWeightOf (r:1 w:0)
             // Storage: CreateDao Daos (r:1 w:0)
         fn enact_proposal() -> Weight {
-        (25_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(3 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoSquare ReserveOf (r:1 w:1)
             // Storage: DaoSquare VotesOf (r:1 w:1)
         fn unlock() -> Weight {
-        (24_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(2 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MinVoteWeightOf (r:0 w:1)
         fn set_min_vote_weight_for_every_call() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MaxPublicProps (r:0 w:1)
         fn set_max_public_props() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare LaunchPeriod (r:0 w:1)
         fn set_launch_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare MinimumDeposit (r:0 w:1)
         fn set_minimum_deposit() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare VotingPeriod (r:0 w:1)
         fn set_voting_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare ReservePeriod (r:0 w:1)
         fn set_rerserve_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSquare EnactmentPeriod (r:0 w:1)
         fn set_enactment_period() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
     }
