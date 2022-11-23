@@ -103,8 +103,8 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// All calls supported by DAO.
-		type Call: Parameter
-			+ UnfilteredDispatchable<Origin = Self::Origin>
+		type RuntimeCall: Parameter
+			+ UnfilteredDispatchable<RuntimeOrigin = Self::RuntimeOrigin>
 			+ GetDispatchInfo
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self>>
@@ -118,7 +118,7 @@ pub mod pallet {
 			+ TypeInfo
 			+ MaxEncodedLen
 			+ Default
-			+ TryFrom<<Self as pallet::Config>::Call>;
+			+ TryFrom<<Self as pallet::Config>::RuntimeCall>;
 
 		/// Each DAO has its own id.
 		type DaoId: Clone + Default + Copy + Parameter + Member + MaxEncodedLen + CheckedAdd + One;
@@ -132,7 +132,7 @@ pub mod pallet {
 			+ Copy
 			+ Default
 			+ AccountIdConversion<Self::AccountId>
-			+ BaseCallFilter<<Self as pallet::Config>::Call>
+			+ BaseCallFilter<<Self as pallet::Config>::RuntimeCall>
 			+ TryCreate<Self::AccountId, Self::DaoId, DispatchError>;
 
 		/// Do some things after creating dao, such as setting up a sudo account.
