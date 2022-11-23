@@ -45,8 +45,7 @@ pub struct DaosWeight<T>(PhantomData<T>);
         impl<T: frame_system::Config> WeightInfo for DaosWeight<T> {
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
         fn execute() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
+            Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency ProposalOf (r:1 w:1)
@@ -56,62 +55,46 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoAgency MotionDuration (r:1 w:0)
             // Storage: DaoAgency Voting (r:0 w:1)
         fn propose() -> Weight {
-        (30_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(6 as Weight))
-            .saturating_add(T::DbWeight::get().writes(4 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency Voting (r:1 w:1)
         fn vote() -> Weight {
-        (19_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency Voting (r:1 w:1)
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency ProposalOf (r:1 w:1)
             // Storage: DaoAgency Proposals (r:1 w:1)
         fn close() -> Weight {
-        (32_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(4 as Weight))
-            .saturating_add(T::DbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency Proposals (r:1 w:1)
             // Storage: DaoAgency Voting (r:0 w:1)
             // Storage: DaoAgency ProposalOf (r:0 w:1)
         fn disapprove_proposal() -> Weight {
-        (20_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MotionDuration (r:0 w:1)
         fn set_motion_duration() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MaxProposals (r:0 w:1)
         fn set_max_proposals() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MaxMembers (r:0 w:1)
         fn set_max_members() -> Weight {
-        (15_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency EnsureOrigins (r:0 w:1)
         fn set_ensure_origin_for_every_call() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
     }
 
@@ -119,8 +102,7 @@ pub struct DaosWeight<T>(PhantomData<T>);
     impl WeightInfo for () {
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
         fn execute() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency ProposalOf (r:1 w:1)
@@ -130,61 +112,45 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoAgency MotionDuration (r:1 w:0)
             // Storage: DaoAgency Voting (r:0 w:1)
         fn propose() -> Weight {
-        (30_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(6 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(4 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency Voting (r:1 w:1)
         fn vote() -> Weight {
-        (19_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: DaoAgency Voting (r:1 w:1)
             // Storage: DaoAgency CollectiveMembers (r:1 w:0)
             // Storage: DaoAgency ProposalOf (r:1 w:1)
             // Storage: DaoAgency Proposals (r:1 w:1)
         fn close() -> Weight {
-        (32_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(4 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency Proposals (r:1 w:1)
             // Storage: DaoAgency Voting (r:0 w:1)
             // Storage: DaoAgency ProposalOf (r:0 w:1)
         fn disapprove_proposal() -> Weight {
-        (20_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(3 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MotionDuration (r:0 w:1)
         fn set_motion_duration() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MaxProposals (r:0 w:1)
         fn set_max_proposals() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency MaxMembers (r:0 w:1)
         fn set_max_members() -> Weight {
-        (15_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoAgency EnsureOrigins (r:0 w:1)
         fn set_ensure_origin_for_every_call() -> Weight {
-        (16_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+                Weight::from_ref_time(20_0000_0000)
         }
     }

@@ -173,24 +173,24 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config<I: 'static = ()>: frame_system::Config + dao::Config {
 		/// The outer origin type.
-		type Origin: From<RawOrigin<<Self as dao::Config>::DaoId, I>>
+		type RuntimeOrigin: From<RawOrigin<<Self as dao::Config>::DaoId, I>>
 			+ Into<
 				Result<
 					RawOrigin<<Self as dao::Config>::DaoId, I>,
-					<Self as pallet::Config<I>>::Origin,
+					<Self as pallet::Config<I>>::RuntimeOrigin,
 				>,
 			>;
 
 		/// The outer event type.
-		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The outer call dispatch type.
 		type Proposal: Parameter
-			+ Dispatchable<Origin = <Self as Config<I>>::Origin, PostInfo = PostDispatchInfo>
+			+ Dispatchable<RuntimeOrigin = <Self as Config<I>>::RuntimeOrigin, PostInfo = PostDispatchInfo>
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self, I>>
 			+ From<dao::Call<Self>>
-			+ IsType<<Self as frame_system::Config>::Call>
+			+ IsType<<Self as frame_system::Config>::RuntimeCall>
 			+ GetDispatchInfo;
 
 		/// External transactions that collectives can execute directly.
@@ -791,14 +791,14 @@ impl<T: Config<I>, I: 'static> SetCollectiveMembers<T::AccountId, T::DaoId, Disp
 
 #[allow(non_snake_case)]
 impl<T: Config<I>, I: 'static>
-	EnsureOriginWithArg<<T as pallet::Config<I>>::Origin, (T::DaoId, T::CallId)> for Pallet<T, I>
+	EnsureOriginWithArg<<T as pallet::Config<I>>::RuntimeOrigin, (T::DaoId, T::CallId)> for Pallet<T, I>
 {
 	type Success = <T as dao::Config>::DaoId;
 
 	fn try_origin(
-		o: <T as Config<I>>::Origin,
+		o: <T as Config<I>>::RuntimeOrigin,
 		a: &(T::DaoId, T::CallId),
-	) -> Result<Self::Success, <T as Config<I>>::Origin> {
+	) -> Result<Self::Success, <T as Config<I>>::RuntimeOrigin> {
 		let ensure = EnsureOrigins::<T, I>::get(a.0, a.1);
 		match ensure {
 			DoAsEnsureOrigin::Proportion(pro) => match pro {
@@ -806,29 +806,29 @@ impl<T: Config<I>, I: 'static>
 					RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
 					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D > N * m =>
 						Ok(dao_id),
-					r => Err(<T as Config<I>>::Origin::from(r)),
+					r => Err(<T as Config<I>>::RuntimeOrigin::from(r)),
 				}),
 				Proportion::AtLeast(N, D) => o.into().and_then(|o| match o {
 					RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
 					RawOrigin::Members(dao_id, n, m) if dao_id == a.0 && n * D >= N * m =>
 						Ok(dao_id),
-					r => Err(<T as Config<I>>::Origin::from(r)),
+					r => Err(<T as Config<I>>::RuntimeOrigin::from(r)),
 				}),
 			},
 			DoAsEnsureOrigin::Member => o.into().and_then(|o| match o {
 				RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
 				RawOrigin::Member(dao_id) if dao_id == a.0 => Ok(dao_id),
-				r => Err(<T as Config<I>>::Origin::from(r)),
+				r => Err(<T as Config<I>>::RuntimeOrigin::from(r)),
 			}),
 			DoAsEnsureOrigin::Members(N) => o.into().and_then(|o| match o {
 				RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
 				RawOrigin::Members(dao_id, n, _m) if dao_id == a.0 && n >= N => Ok(dao_id),
-				r => Err(<T as Config<I>>::Origin::from(r)),
+				r => Err(<T as Config<I>>::RuntimeOrigin::from(r)),
 			}),
 
 			_ => o.into().and_then(|o| match o {
 				RawOrigin::Root(dao_id) if dao_id == a.0 => Ok(dao_id),
-				r => Err(<T as Config<I>>::Origin::from(r)),
+				r => Err(<T as Config<I>>::RuntimeOrigin::from(r)),
 			}),
 		}
 	}
