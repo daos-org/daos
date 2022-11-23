@@ -48,7 +48,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Weight information for extrinsics in this pallet.
 		type WeightInfo: WeightInfo;
 	}
@@ -89,7 +89,7 @@ pub mod pallet {
 		pub fn sudo(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			call: Box<<T as dao::Config>::Call>,
+			call: Box<<T as dao::Config>::RuntimeCall>,
 		) -> DispatchResultWithPostInfo {
 			let sudo = Self::check_origin(dao_id, origin)?;
 			let concrete_id = dao::Pallet::<T>::try_get_concrete_id(dao_id)?;
