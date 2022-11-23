@@ -79,11 +79,11 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// Origin must be from collective.
 		type DoAsOrigin: EnsureOriginWithArg<
-			Self::Origin,
+			Self::RuntimeOrigin,
 			(Self::DaoId, Self::CallId),
 			Success = Self::DaoId,
 		>;
@@ -114,14 +114,14 @@ pub mod pallet {
 		pub fn do_as_agency(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			call: Box<<T as dao::Config>::Call>,
+			call: Box<<T as dao::Config>::RuntimeCall>,
 		) -> DispatchResultWithPostInfo {
 			ensure!(
 				dao::Pallet::<T>::try_get_concrete_id(dao_id)?.contains(*call.clone()),
 				dao::Error::<T>::InVailCall
 			);
 			let call_id: T::CallId =
-				TryFrom::<<T as dao::Config>::Call>::try_from(*call.clone()).unwrap_or_default();
+				TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(*call.clone()).unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| dao::Error::<T>::BadOrigin)?;
