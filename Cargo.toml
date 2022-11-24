@@ -9,4 +9,5 @@ members = [
 	"primitives",
 	"create-dao",
 	"sudo",
+	"emergency",
 ]
