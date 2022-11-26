@@ -13,10 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use dao;
 use frame_support::codec::{Decode, Encode};
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
@@ -34,13 +32,18 @@ use sp_runtime::RuntimeDebug;
 // #[cfg(feature = "runtime-benchmarks")]
 // mod benchmarking;
 
+/// Specific information on emergency proposal.
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
 pub struct ProposalInfo<AccountId, Call, Amount, BlockNumber> {
+	/// who initiated the emergency proposal.
 	who: Option<AccountId>,
+	/// Proposal end block height.
 	end_block: BlockNumber,
+	/// proposal.
 	call: Call,
-	enact_period: BlockNumber,
+	/// The amount that the proposal needs to pledge.
 	pledge: Amount,
+	/// Reason for Proposal.
 	reason: Vec<u8>,
 }
 
@@ -49,8 +52,7 @@ pub mod pallet {
 	use crate::ProposalInfo;
 	use dao::Hash;
 	use frame_support::{
-		dispatch::{DispatchResult as DResult, DispatchResultWithPostInfo, UnfilteredDispatchable},
-		pallet,
+		dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable},
 		pallet_prelude::*,
 		traits::{Currency, ReservableCurrency},
 	};
@@ -65,19 +67,16 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
+		/// An external origin that can submit urgent proposals to the DAO.
 		type ExternalOrigin: EnsureOrigin<Self::Origin>;
-
+		/// Operations related to funds.
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
-
+		/// The minimum pledge amount required by the system. Each DAO cannot be lower than this value.
 		#[pallet::constant]
 		type MinPledge: Get<BalanceOf<Self>>;
-
+		/// How long the proposal takes.
 		#[pallet::constant]
 		type TrackPeriod: Get<Self::BlockNumber>;
-
-		#[pallet::constant]
-		type EnactPeriod: Get<Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -85,19 +84,23 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
+	/// Members of the DAO who can make emergency proposals.
 	#[pallet::storage]
 	#[pallet::getter(fn members)]
 	pub type Members<T: Config> =
 		StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
 
+	/// The amount that needs to be pledged for internal emergency proposals.
 	#[pallet::storage]
 	#[pallet::getter(fn pledge_of)]
 	pub type PledgeOf<T: Config> = StorageMap<_, Identity, T::DaoId, BalanceOf<T>, ValueQuery>;
 
+	/// hash of all emergency proposals in DAO.
 	#[pallet::storage]
 	#[pallet::getter(fn hashes_of)]
 	pub type HashesOf<T: Config> = StorageMap<_, Identity, T::DaoId, Vec<T::Hash>, ValueQuery>;
 
+	/// Specific information for each proposal.
 	#[pallet::storage]
 	#[pallet::getter(fn proposal_of)]
 	pub type ProposalOf<T: Config> = StorageDoubleMap<
@@ -112,25 +115,29 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Event documentation should end with an array that provides descriptive names for event
+		/// Set members who can make emergency proposals.
 		SetMembers {
 			dao_id: T::DaoId,
 			members: Vec<T::AccountId>,
 		},
+		/// Successfully made an emergency proposal.
 		Track {
 			dao_id: T::DaoId,
 			who: Option<T::AccountId>,
 			call: <T as dao::Config>::Call,
 		},
+		/// Successfully rejected an emergency proposal.
 		Rejected {
 			dao_id: T::DaoId,
 			proposal_hash: T::Hash,
 		},
+		/// Execute a transaction related to an emergency proposal.
 		EnactProposal {
 			dao_id: T::DaoId,
 			proposal_hash: T::Hash,
 			res: DispatchResultWithPostInfo,
 		},
+		/// Set the amount that needs to be staked for an emergency proposal.
 		SetPledge {
 			dao_id: T::DaoId,
 			amount: BalanceOf<T>,
@@ -140,18 +147,21 @@ pub mod pallet {
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
-		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
 		ProposalAlreadyExists,
 		ProposalNotExists,
-		TrackEnded,
+		ProposalEnded,
 		PledgeTooLow,
+		NotEmergencyMembers,
+		/// No permission to reject proposals.
+		PermissionDenied,
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		/// Set members who can make emergency proposals.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_members(
 			origin: OriginFor<T>,
@@ -164,6 +174,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Set the amount that needs to be pledge for an emergency proposal.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_pledge(
 			origin: OriginFor<T>,
@@ -177,6 +188,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+
+		/// Externally initiated an emergency proposal.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn external_track(
 			origin: OriginFor<T>,
@@ -189,6 +202,8 @@ pub mod pallet {
 			Self::try_track_do(dao_id, proposal, None, reason)
 		}
 
+
+		/// Member initiates an urgent proposal.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn internal_track(
 			origin: OriginFor<T>,
@@ -196,27 +211,38 @@ pub mod pallet {
 			proposal: <T as dao::Config>::Call,
 			reason: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
-			let who = if let Ok(_) = dao::Pallet::<T>::ensrue_dao_root(origin.clone(), dao_id) {
-				None
-			} else {
-				Some(ensure_signed(origin.clone())?)
-			};
+			let who = ensure_signed(origin)?;
 
-			Self::try_track_do(dao_id, proposal, who, reason)
+			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
+
+			Self::try_track_do(dao_id, proposal, Some(who), reason)
 		}
 
+
+		/// Rejected an emergency proposal.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reject(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
 			proposal_hash: T::Hash,
 		) -> DispatchResultWithPostInfo {
-			// todo
+
+			let who = ensure_signed(origin)?;
+
+			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
+
 			HashesOf::<T>::try_mutate(dao_id, |hashes| -> DispatchResultWithPostInfo {
 				hashes.retain(|h| h != &proposal_hash);
 				let proposal = ProposalOf::<T>::take(dao_id, proposal_hash)
 					.ok_or(Error::<T>::ProposalNotExists)?;
-				ensure!(Self::now() < proposal.end_block, Error::<T>::TrackEnded);
+
+				if let None = proposal.who {
+					if who != dao::Pallet::<T>::try_get_dao_account_id(dao_id)? && !Members::<T>::get(dao_id).contains(&who) {
+						return Err(Error::<T>::PermissionDenied)?;
+					}
+				}
+
+				ensure!(Self::now() < proposal.end_block, Error::<T>::ProposalEnded);
 				if let Some(who) = proposal.who.clone() {
 					T::Currency::slash_reserved(&who, proposal.pledge);
 				}
@@ -226,6 +252,8 @@ pub mod pallet {
 			})
 		}
 
+
+		/// Execute a transaction related to an emergency proposal.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn enact_proposal(
 			origin: OriginFor<T>,
@@ -237,14 +265,7 @@ pub mod pallet {
 				hashes.retain(|h| h != &proposal_hash);
 				let proposal = ProposalOf::<T>::take(dao_id, proposal_hash)
 					.ok_or(Error::<T>::ProposalNotExists)?;
-				ensure!(
-					Self::now() >=
-						proposal
-							.end_block
-							.checked_add(&T::EnactPeriod::get())
-							.ok_or(Error::<T>::StorageOverflow)?,
-					Error::<T>::TrackEnded
-				);
+				ensure!(Self::now() >= proposal.end_block, Error::<T>::ProposalEnded);
 				if let Some(who) = proposal.who.clone() {
 					T::Currency::unreserve(&who, proposal.pledge);
 				}
@@ -292,7 +313,6 @@ pub mod pallet {
 							who: who.clone(),
 							end_block,
 							call: proposal.clone(),
-							enact_period: T::EnactPeriod::get(),
 							pledge,
 							reason,
 						},
