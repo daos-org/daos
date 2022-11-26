@@ -199,7 +199,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			T::ExternalOrigin::ensure_origin(origin)?;
 
-			Self::try_track_do(dao_id, proposal, None, reason)
+			Self::try_propose(dao_id, proposal, None, reason)
 		}
 
 
@@ -215,7 +215,7 @@ pub mod pallet {
 
 			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
 
-			Self::try_track_do(dao_id, proposal, Some(who), reason)
+			Self::try_propose(dao_id, proposal, Some(who), reason)
 		}
 
 
@@ -288,7 +288,7 @@ pub mod pallet {
 			frame_system::Pallet::<T>::current_block_number()
 		}
 
-		fn try_track_do(
+		fn try_propose(
 			dao_id: T::DaoId,
 			proposal: <T as dao::Config>::Call,
 			who: Option<T::AccountId>,
