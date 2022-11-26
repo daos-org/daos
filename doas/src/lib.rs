@@ -40,7 +40,6 @@
 //! 		.is_ok());
 //! ***
 
-
 pub use codec::MaxEncodedLen;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{

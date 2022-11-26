@@ -817,7 +817,7 @@ impl<T: Config> Pallet<T> {
 					now.saturating_add(VotingPeriod::<T>::get(dao_id)),
 					proposal,
 					EnactmentPeriod::<T>::get(dao_id),
-				));
+				))
 			}
 		}
 		Err(Error::<T>::NoneWaiting)?

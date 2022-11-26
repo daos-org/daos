@@ -1,5 +1,5 @@
-// Copyright 2021 DICO  Developer.
-// This file is part of DICO
+// Copyright 2022 daos-org.
+// This file is part of DAOS
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,48 +13,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use dao;
+use frame_support::codec::{Decode, Encode};
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
-use dao;
-use frame_support::codec::{Decode, Encode};
-use sp_runtime::RuntimeDebug;
 use scale_info::TypeInfo;
+use sp_runtime::RuntimeDebug;
 
-#[cfg(test)]
-mod mock;
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
-
+// #[cfg(test)]
+// mod mock;
+//
+// #[cfg(test)]
+// mod tests;
+//
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
 
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
-pub struct ProposalInfo<AccountId, Hash, Amount, BlockNumber> {
+pub struct ProposalInfo<AccountId, Call, Amount, BlockNumber> {
 	who: Option<AccountId>,
 	end_block: BlockNumber,
-	proposal_hash: Hash,
+	call: Call,
 	enact_period: BlockNumber,
 	pledge: Amount,
 	reason: Vec<u8>,
 }
 
-
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*, traits::Currency};
-	use frame_system::pallet_prelude::*;
-	use sp_runtime::biguint::Double;
-	use dao::Daos;
 	use crate::ProposalInfo;
+	use dao::Hash;
+	use frame_support::{
+		dispatch::{DispatchResult as DResult, DispatchResultWithPostInfo, UnfilteredDispatchable},
+		pallet,
+		pallet_prelude::*,
+		traits::{Currency, ReservableCurrency},
+	};
+	use frame_system::pallet_prelude::*;
+	use sp_runtime::traits::{BlockNumberProvider, CheckedAdd};
 
 	pub type BalanceOf<T> =
-	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -64,10 +68,16 @@ pub mod pallet {
 
 		type ExternalOrigin: EnsureOrigin<Self::Origin>;
 
-		type Currency: Currency<Self::AccountId>;
+		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
+		#[pallet::constant]
 		type MinPledge: Get<BalanceOf<Self>>;
 
+		#[pallet::constant]
+		type TrackPeriod: Get<Self::BlockNumber>;
+
+		#[pallet::constant]
+		type EnactPeriod: Get<Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -75,17 +85,10 @@ pub mod pallet {
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
-	// The pallet's runtime storage items.
-	// https://docs.substrate.io/v3/runtime/storage
-	#[pallet::storage]
-	#[pallet::getter(fn something)]
-	// Learn more about declaring storage items:
-	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
-	pub type Something<T> = StorageValue<_, u32>;
-
 	#[pallet::storage]
 	#[pallet::getter(fn members)]
-	pub type Members<T: Config> = StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
+	pub type Members<T: Config> =
+		StorageMap<_, Identity, <T as dao::Config>::DaoId, Vec<T::AccountId>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn pledge_of)]
@@ -97,17 +100,41 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn proposal_of)]
-	pub type ProposalOf<T: Config> = StorageDoubleMap<_, Identity, T::DaoId, Identity, T::Hash, ProposalInfo<T::AccountId, T::Hash, BalanceOf<T>, T::BlockNumber>>;
+	pub type ProposalOf<T: Config> = StorageDoubleMap<
+		_,
+		Identity,
+		T::DaoId,
+		Identity,
+		T::Hash,
+		ProposalInfo<T::AccountId, <T as dao::Config>::Call, BalanceOf<T>, T::BlockNumber>,
+	>;
 
-
-	// Pallets use events to inform users when important changes are made.
-	// https://docs.substrate.io/v3/runtime/events-and-errors
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, T::AccountId),
+		SetMembers {
+			dao_id: T::DaoId,
+			members: Vec<T::AccountId>,
+		},
+		Track {
+			dao_id: T::DaoId,
+			who: Option<T::AccountId>,
+			call: <T as dao::Config>::Call,
+		},
+		Rejected {
+			dao_id: T::DaoId,
+			proposal_hash: T::Hash,
+		},
+		EnactProposal {
+			dao_id: T::DaoId,
+			proposal_hash: T::Hash,
+			res: DispatchResultWithPostInfo,
+		},
+		SetPledge {
+			dao_id: T::DaoId,
+			amount: BalanceOf<T>,
+		},
 	}
 
 	// Errors inform users that something went wrong.
@@ -117,42 +144,164 @@ pub mod pallet {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		ProposalAlreadyExists,
+		ProposalNotExists,
+		TrackEnded,
+		PledgeTooLow,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
-	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	// These functions materialize as "extrinsics", which are often compared to transactions.
-	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn set_memers(origin: OriginFor<T>, dao_id: T::DaoId, members: Vec<T::AccountId>) -> DispatchResultWithPostInfo {
+		pub fn set_members(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			members: Vec<T::AccountId>,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			Members::<T>::insert(dao_id, &members);
+			Self::deposit_event(Event::SetMembers { dao_id, members });
 			Ok(().into())
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn external_track(origin: OriginFor<T>, dao_id: T::DaoId, proposal: <T as dao::Config>::DaoId, reason: Vec<u8>) -> DispatchResultWithPostInfo {
+		pub fn set_pledge(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			amount: BalanceOf<T>,
+		) -> DispatchResultWithPostInfo {
+			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
+			ensure!(amount >= T::MinPledge::get(), Error::<T>::PledgeTooLow);
+			PledgeOf::<T>::insert(dao_id, amount);
+			Self::deposit_event(Event::SetPledge { dao_id, amount });
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn external_track(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			proposal: <T as dao::Config>::Call,
+			reason: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
 			T::ExternalOrigin::ensure_origin(origin)?;
-			Ok(().into())
+
+			Self::try_track_do(dao_id, proposal, None, reason)
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn internal_track(origin: OriginFor<T>, dao_id: T::DaoId, proposal: <T as dao::Config>::DaoId, reason: Vec<u8>) -> DispatchResultWithPostInfo {
-			Ok(().into())
+		pub fn internal_track(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			proposal: <T as dao::Config>::Call,
+			reason: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
+			let who = if let Ok(_) = dao::Pallet::<T>::ensrue_dao_root(origin.clone(), dao_id) {
+				None
+			} else {
+				Some(ensure_signed(origin.clone())?)
+			};
+
+			Self::try_track_do(dao_id, proposal, who, reason)
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn reject(origin: OriginFor<T>, dao_id: T::DaoId, proposal_hash: T::Hash) -> DispatchResultWithPostInfo {
-			Ok(().into())
+		pub fn reject(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			proposal_hash: T::Hash,
+		) -> DispatchResultWithPostInfo {
+			// todo
+			HashesOf::<T>::try_mutate(dao_id, |hashes| -> DispatchResultWithPostInfo {
+				hashes.retain(|h| h != &proposal_hash);
+				let proposal = ProposalOf::<T>::take(dao_id, proposal_hash)
+					.ok_or(Error::<T>::ProposalNotExists)?;
+				ensure!(Self::now() < proposal.end_block, Error::<T>::TrackEnded);
+				if let Some(who) = proposal.who.clone() {
+					T::Currency::slash_reserved(&who, proposal.pledge);
+				}
+				ProposalOf::<T>::insert(dao_id, proposal_hash, proposal);
+				Self::deposit_event(Event::Rejected { dao_id, proposal_hash });
+				Ok(().into())
+			})
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn enact_proposal(origin: OriginFor<T>, dao_id: T::DaoId, proposal_hash: T::Hash) -> DispatchResultWithPostInfo {
-			Ok(().into())
+		pub fn enact_proposal(
+			origin: OriginFor<T>,
+			dao_id: T::DaoId,
+			proposal_hash: T::Hash,
+		) -> DispatchResultWithPostInfo {
+			let _ = ensure_signed(origin)?;
+			HashesOf::<T>::try_mutate(dao_id, |hashes| -> DispatchResultWithPostInfo {
+				hashes.retain(|h| h != &proposal_hash);
+				let proposal = ProposalOf::<T>::take(dao_id, proposal_hash)
+					.ok_or(Error::<T>::ProposalNotExists)?;
+				ensure!(
+					Self::now() >=
+						proposal
+							.end_block
+							.checked_add(&T::EnactPeriod::get())
+							.ok_or(Error::<T>::StorageOverflow)?,
+					Error::<T>::TrackEnded
+				);
+				if let Some(who) = proposal.who.clone() {
+					T::Currency::unreserve(&who, proposal.pledge);
+				}
+				ProposalOf::<T>::insert(dao_id, proposal_hash, proposal.clone());
+				let res = proposal.call.dispatch_bypass_filter(
+					frame_system::RawOrigin::Signed(dao::Pallet::<T>::try_get_dao_account_id(
+						dao_id,
+					)?)
+					.into(),
+				);
+
+				Self::deposit_event(Event::EnactProposal { dao_id, proposal_hash, res });
+				Ok(().into())
+			})
+		}
+	}
+
+	impl<T: Config> Pallet<T> {
+		fn now() -> T::BlockNumber {
+			frame_system::Pallet::<T>::current_block_number()
 		}
 
+		fn try_track_do(
+			dao_id: T::DaoId,
+			proposal: <T as dao::Config>::Call,
+			who: Option<T::AccountId>,
+			reason: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
+			let proposal_hash: T::Hash = T::Hashing::hash_of(&proposal);
+			HashesOf::<T>::try_mutate(dao_id, |hashes| -> DispatchResultWithPostInfo {
+				if !hashes.contains(&proposal_hash) {
+					hashes.push(proposal_hash);
+					let end_block = Self::now()
+						.checked_add(&T::TrackPeriod::get())
+						.ok_or(Error::<T>::StorageOverflow)?;
+					let pledge = if let None = who {
+						0u32.into()
+					} else {
+						T::MinPledge::get().max(PledgeOf::<T>::get(dao_id))
+					};
+					ProposalOf::<T>::insert(
+						dao_id,
+						proposal_hash,
+						&ProposalInfo {
+							who: who.clone(),
+							end_block,
+							call: proposal.clone(),
+							enact_period: T::EnactPeriod::get(),
+							pledge,
+							reason,
+						},
+					);
+					Self::deposit_event(Event::Track { dao_id, who, call: proposal });
+					return Ok(().into())
+				}
+				Err(Error::<T>::ProposalAlreadyExists)?
+			})
+		}
 	}
 }

@@ -53,7 +53,6 @@
 //! 		.is_ok());
 //! ***
 
-
 use frame_support::{
 	codec::{Decode, Encode},
 	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
