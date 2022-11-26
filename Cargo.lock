@@ -496,9 +496,11 @@ dependencies = [
 name = "daos-emergency"
 version = "3.0.0"
 dependencies = [
+ "daos-create-dao",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",
