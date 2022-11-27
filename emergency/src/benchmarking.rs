@@ -78,6 +78,7 @@ fn get_members<T: Config>() -> T::DaoId {
 fn internal<T: Config>() -> (T::DaoId, T::Hash) {
 	let dao_id = get_members::<T>();
 	let (proposal, hash) = get_call::<T>(dao_id);
+	crate::Members::<T>::insert(dao_id, vec![get_alice::<T>(), ]);
 	assert!(Emergency::<T>::internal_track(
 		SystemOrigin::Signed(get_alice::<T>()).into(),
 		dao_id,
@@ -116,6 +117,6 @@ benchmarks! {
 
 	enact_proposal {
 		let (dao_id, hash) = internal::<T>();
-		frame_system::Pallet::<T>::set_block_number(T::BlockNumber::from(10000u32));
+		frame_system::Pallet::<T>::set_block_number(T::BlockNumber::from(1000000u32));
 	}:_(SystemOrigin::Signed(get_bob::<T>()), dao_id, hash)
 }

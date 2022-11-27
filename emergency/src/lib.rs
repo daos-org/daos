@@ -43,6 +43,7 @@ use sp_runtime::{
 	traits::{BlockNumberProvider, CheckedAdd},
 	RuntimeDebug,
 };
+use weights::WeightInfo;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -50,6 +51,7 @@ mod benchmarking;
 mod mock;
 #[cfg(test)]
 mod tests;
+mod weights;
 
 /// Specific information on emergency proposal.
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
@@ -89,6 +91,7 @@ pub mod pallet {
 		/// How long the proposal takes.
 		#[pallet::constant]
 		type TrackPeriod: Get<Self::BlockNumber>;
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -156,7 +159,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Set members who can make emergency proposals.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_members())]
 		pub fn set_members(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -169,7 +172,7 @@ pub mod pallet {
 		}
 
 		/// Set the amount that needs to be pledge for an emergency proposal.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_pledge())]
 		pub fn set_pledge(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
@@ -183,7 +186,7 @@ pub mod pallet {
 		}
 
 		/// Externally initiated an emergency proposal.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::external_track())]
 		#[transactional]
 		pub fn external_track(
 			origin: OriginFor<T>,
@@ -196,7 +199,7 @@ pub mod pallet {
 		}
 
 		/// Member initiates an urgent proposal.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::internal_track())]
 		#[transactional]
 		pub fn internal_track(
 			origin: OriginFor<T>,
@@ -207,12 +210,11 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
-
 			Self::try_propose(dao_id, *proposal, Some(who), reason)
 		}
 
 		/// Rejected an emergency proposal.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::reject())]
 		#[transactional]
 		pub fn reject(
 			origin: OriginFor<T>,
@@ -220,8 +222,6 @@ pub mod pallet {
 			proposal_hash: T::Hash,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-
-			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
 
 			HashesOf::<T>::try_mutate(dao_id, |hashes| -> DispatchResultWithPostInfo {
 				hashes.retain(|h| h != &proposal_hash);
@@ -245,7 +245,7 @@ pub mod pallet {
 		}
 
 		/// Execute a transaction related to an emergency proposal.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::enact_proposal())]
 		#[transactional]
 		pub fn enact_proposal(
 			origin: OriginFor<T>,
