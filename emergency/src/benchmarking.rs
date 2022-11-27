@@ -1,13 +1,13 @@
 use super::*;
 use crate::{Config, Pallet as Emergency};
-use frame_system::RawOrigin as SystemOrigin;
+use dao::Call as DaoCall;
 use frame_benchmarking::{
 	account, benchmarks, benchmarks_instance, impl_benchmark_test_suite, whitelisted_caller,
 };
-use sp_std::vec;
-use sp_runtime::SaturatedConversion;
+use frame_system::RawOrigin as SystemOrigin;
 use primitives::AccountIdConversion;
-use dao::Call as DaoCall;
+use sp_runtime::SaturatedConversion;
+use sp_std::vec;
 
 const DOLLARS: u128 = 1_00_00000_00000;
 
@@ -48,27 +48,43 @@ fn get_call<T: Config>(dao_id: T::DaoId) -> (<T as dao::Config>::Call, T::Hash) 
 	(proposal.clone(), T::Hashing::hash_of(&proposal))
 }
 
-fn get_members<T: Config>() -> T::DaoId{
+fn get_members<T: Config>() -> T::DaoId {
 	let (dao_id, second_id) = creat_dao::<T>();
 	let dao = get_dao_account::<T>(second_id);
-	assert!(Emergency::<T>::set_members(SystemOrigin::Signed(dao).into(), dao_id, vec![get_alice::<T>(), ]).is_ok());
+	assert!(Emergency::<T>::set_members(
+		SystemOrigin::Signed(dao).into(),
+		dao_id,
+		vec![get_alice::<T>(),]
+	)
+	.is_ok());
 	dao_id
 }
 
-fn external<T: Config>() -> (T::DaoId, T::Hash){
+fn external<T: Config>() -> (T::DaoId, T::Hash) {
 	let (dao_id, second_id) = creat_dao::<T>();
 	let (proposal, hash) = get_call::<T>(dao_id);
-	assert!(Emergency::<T>::external_track(SystemOrigin::Root.into(), dao_id, Box::new(proposal), vec![1, 2, 3, 4]).is_ok());
+	assert!(Emergency::<T>::external_track(
+		SystemOrigin::Root.into(),
+		dao_id,
+		Box::new(proposal),
+		vec![1, 2, 3, 4]
+	)
+	.is_ok());
 	(dao_id, hash)
 }
 
 fn internal<T: Config>() -> (T::DaoId, T::Hash) {
 	let dao_id = get_members::<T>();
 	let (proposal, hash) = get_call::<T>(dao_id);
-	assert!(Emergency::<T>::internal_track(SystemOrigin::Signed(get_alice::<T>()).into(), dao_id, Box::new(proposal), vec![1, 2, 3, 4]).is_ok());
+	assert!(Emergency::<T>::internal_track(
+		SystemOrigin::Signed(get_alice::<T>()).into(),
+		dao_id,
+		Box::new(proposal),
+		vec![1, 2, 3, 4]
+	)
+	.is_ok());
 	(dao_id, hash)
 }
-
 
 benchmarks! {
 	set_members {

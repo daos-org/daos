@@ -7,15 +7,13 @@ use frame_support::{
 	sp_tracing::debug,
 	traits::{ConstU16, ConstU32, ConstU64, Contains},
 };
-use frame_system;
-use frame_system::{Account, EnsureRoot};
+use frame_system::{self, Account, EnsureRoot};
 use primitives::{ids::Nft, traits::BaseCallFilter, types::MemberCount};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
-	BuildStorage,
-	DispatchError,
+	BuildStorage, DispatchError,
 };
 use sp_std::result::Result;
 
@@ -100,7 +98,6 @@ impl dao::Config for Test {
 	type WeightInfo = ();
 }
 
-
 impl sudo::Config for Test {
 	type Event = Event;
 	type WeightInfo = ();
@@ -128,4 +125,3 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	.unwrap();
 	t.into()
 }
-
