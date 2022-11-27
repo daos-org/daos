@@ -497,6 +497,8 @@ name = "daos-emergency"
 version = "3.0.0"
 dependencies = [
  "daos-create-dao",
+ "daos-primitives",
+ "daos-sudo",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
@@ -507,6 +509,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

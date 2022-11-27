@@ -17,6 +17,7 @@ scale-info 		      = { version = "2.1.1", default-features = false, features = [
 codec                 = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
 
 sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
 
 frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
 frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
@@ -25,6 +26,8 @@ pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'p
 
 # local
 dao = { path = "../create-dao", package = "daos-create-dao", default-features = false }
+sudo = { path = "../sudo", package = "daos-sudo", default-features = false }
+primitives = { path = "../primitives", package = "daos-primitives", default-features = false }
 
 [dev-dependencies]
 serde      = { version = "1.0.101" }
@@ -34,13 +37,19 @@ sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkad
 
 [features]
 default = ['std']
-runtime-benchmarks = ['frame-benchmarking']
+runtime-benchmarks = ['frame-benchmarking/runtime-benchmarks']
 std = [
     'codec/std',
     'scale-info/std',
     'dao/std',
+    'sp-std/std',
     'frame-support/std',
     'frame-system/std',
     'pallet-balances/std',
 	'sp-runtime/std',
+    'sudo/std',
+    'primitives/std',
+    'sp-core/std',
+    'sp-runtime/std',
+    'sp-io/std',
 ]

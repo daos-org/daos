@@ -14,18 +14,22 @@
 // limitations under the License.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
-use frame_support::codec::{Decode, Encode};
-/// Edit this file to define custom logic or remove it if it is not needed.
-/// Learn more about FRAME and the core library of Substrate FRAME pallets:
-/// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
+use frame_support::codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
+use dao::Hash;
+use frame_support::{
+	dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable, DispatchInfo, GetDispatchInfo, PostDispatchInfo},
+	pallet_prelude::*,
+	traits::{Currency, ReservableCurrency},
+};
+use frame_system::pallet_prelude::*;
+use sp_runtime::traits::{BlockNumberProvider, CheckedAdd};
 
-// #[cfg(test)]
-// mod mock;
-//
+#[cfg(test)]
+mod mock;
+
 // #[cfg(test)]
 // mod tests;
 //
@@ -49,15 +53,7 @@ pub struct ProposalInfo<AccountId, Call, Amount, BlockNumber> {
 
 #[frame_support::pallet]
 pub mod pallet {
-	use crate::ProposalInfo;
-	use dao::Hash;
-	use frame_support::{
-		dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable},
-		pallet_prelude::*,
-		traits::{Currency, ReservableCurrency},
-	};
-	use frame_system::pallet_prelude::*;
-	use sp_runtime::traits::{BlockNumberProvider, CheckedAdd};
+	use super::*;
 
 	pub type BalanceOf<T> =
 		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -67,6 +63,15 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		// /// The outer call dispatch type.
+		// type Proposal: Parameter
+		// 	+ From<frame_system::Call<Self>>
+		// 	+ From<Call<Self>>
+		// 	+ From<dao::Call<Self>>
+		// 	+ IsType<<Self as frame_system::Config>::Call>
+		// 	+ GetDispatchInfo;
+
 		/// An external origin that can submit urgent proposals to the DAO.
 		type ExternalOrigin: EnsureOrigin<Self::Origin>;
 		/// Operations related to funds.
@@ -160,7 +165,6 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		/// Set members who can make emergency proposals.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn set_members(
@@ -208,14 +212,14 @@ pub mod pallet {
 		pub fn internal_track(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			proposal: <T as dao::Config>::Call,
+			proposal: Box<<T as dao::Config>::Call>,
 			reason: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
 			ensure!(Members::<T>::get(dao_id).contains(&who), Error::<T>::NotEmergencyMembers);
 
-			Self::try_propose(dao_id, proposal, Some(who), reason)
+			Self::try_propose(dao_id, *proposal, Some(who), reason)
 		}
 
 
