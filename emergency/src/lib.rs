@@ -15,9 +15,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(test)]
-mod mock;
-
 pub use pallet::*;
 use frame_support::codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -32,14 +29,10 @@ use frame_system::pallet_prelude::*;
 use dao::{Vec, Box};
 use sp_runtime::traits::{BlockNumberProvider, CheckedAdd};
 
-// #[cfg(test)]
-// mod mock;
-
-// #[cfg(test)]
-// mod tests;
-//
-// #[cfg(feature = "runtime-benchmarks")]
-// mod benchmarking;
+#[cfg(test)]
+mod mock;
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 /// Specific information on emergency proposal.
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
