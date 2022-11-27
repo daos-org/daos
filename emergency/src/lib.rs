@@ -14,6 +14,10 @@
 // limitations under the License.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(test)]
+mod mock;
+
 pub use pallet::*;
 use frame_support::codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -25,10 +29,11 @@ use frame_support::{
 	traits::{Currency, ReservableCurrency},
 };
 use frame_system::pallet_prelude::*;
+use dao::{Vec, Box};
 use sp_runtime::traits::{BlockNumberProvider, CheckedAdd};
 
-#[cfg(test)]
-mod mock;
+// #[cfg(test)]
+// mod mock;
 
 // #[cfg(test)]
 // mod tests;
@@ -64,14 +69,6 @@ pub mod pallet {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		// /// The outer call dispatch type.
-		// type Proposal: Parameter
-		// 	+ From<frame_system::Call<Self>>
-		// 	+ From<Call<Self>>
-		// 	+ From<dao::Call<Self>>
-		// 	+ IsType<<Self as frame_system::Config>::Call>
-		// 	+ GetDispatchInfo;
-
 		/// An external origin that can submit urgent proposals to the DAO.
 		type ExternalOrigin: EnsureOrigin<Self::Origin>;
 		/// Operations related to funds.
@@ -85,7 +82,6 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
@@ -198,12 +194,11 @@ pub mod pallet {
 		pub fn external_track(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			proposal: <T as dao::Config>::Call,
+			proposal: Box<<T as dao::Config>::Call>,
 			reason: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			T::ExternalOrigin::ensure_origin(origin)?;
-
-			Self::try_propose(dao_id, proposal, None, reason)
+			Self::try_propose(dao_id, *proposal, None, reason)
 		}
 
 

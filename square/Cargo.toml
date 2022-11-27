@@ -43,6 +43,7 @@ std = [
 	'frame-support/std',
 	'frame-system/std',
 	'sp-runtime/std',
+
 	'dao/std',
 	'pallet-balances/std',
 	"sudo/std",
