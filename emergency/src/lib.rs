@@ -24,6 +24,9 @@
 //! Internal personnel with authority to deal with emergencies, or ExternalOrigin,
 //! They can make a proposal. But their rights can only be used in relation to emergencies.
 //!
+//! Emergency members can reject external proposals.
+//! Anyone can reject internal proposals.
+//!
 
 pub use pallet::*;
 use frame_support::codec::{Decode, Encode};
