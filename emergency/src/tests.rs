@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use super::*;
 use crate::mock::{Call, Origin, *};
 use frame_support::assert_ok;
@@ -30,27 +32,26 @@ pub fn set_sudo() {
 
 pub fn set_members() {
 	set_sudo();
-	let proposal_1 = Call::Emergency(crate::Call::set_members { dao_id: 0u64, members: vec![ALICE,] });
+	let proposal_1 =
+		Call::Emergency(crate::Call::set_members { dao_id: 0u64, members: vec![ALICE] });
 	assert_ok!(sudo::Pallet::<Test>::sudo(Origin::signed(ALICE), 0u64, Box::new(proposal_1)));
 	assert!(crate::Members::<Test>::get(0u64).len() > 0);
 }
 
 fn get_proposal() -> Vec<u8> {
-	Call::Emergency(
-		crate::Call::set_pledge { dao_id: 0u64, amount: 1000u64 }).encode()
+	Call::Emergency(crate::Call::set_pledge { dao_id: 0u64, amount: 1000u64 }).encode()
 }
 
 fn external() {
 	rec_balance();
 	let proposal = Call::decode(&mut &get_proposal()[..]).unwrap();
 	assert_ok!(crate::Pallet::<Test>::external_track(
-	Origin::root(),
-	0u64,
-	Box::new(proposal),
-	vec![1, 2, 3, 4]
-));
+		Origin::root(),
+		0u64,
+		Box::new(proposal),
+		vec![1, 2, 3, 4]
+	));
 	assert!(crate::HashesOf::<Test>::get(0u64).len() > 0);
-
 }
 
 fn internal() {
@@ -68,7 +69,8 @@ fn internal() {
 		0u64,
 		Box::new(proposal),
 		vec![1, 2, 3, 4]
-	).is_err());
+	)
+	.is_err());
 	assert!(crate::HashesOf::<Test>::get(0u64).len() > 0);
 	assert!(crate::HashesOf::<Test>::get(0u64).contains(&BlakeTwo256::hash(&get_proposal()[..])));
 	assert!(crate::ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])));
@@ -84,7 +86,6 @@ fn set_xx_should_work() {
 	})
 }
 
-
 #[test]
 fn external_track_should_work() {
 	new_test_ext().execute_with(|| {
@@ -94,7 +95,7 @@ fn external_track_should_work() {
 
 #[test]
 fn internal_track_should_work() {
-	new_test_ext().execute_with(||{
+	new_test_ext().execute_with(|| {
 		internal();
 	});
 }
@@ -104,19 +105,26 @@ fn reject_internal_track() {
 	new_test_ext().execute_with(|| {
 		internal();
 		frame_system::Pallet::<Test>::set_block_number(10000);
-		assert!(crate::ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])));
+		assert!(crate::ProposalOf::<Test>::contains_key(
+			0u64,
+			BlakeTwo256::hash(&get_proposal()[..])
+		));
 		assert!(crate::Pallet::<Test>::reject(
 			Origin::signed(ALICE),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..]),
-		).is_err());
+		)
+		.is_err());
 		frame_system::Pallet::<Test>::set_block_number(0);
 		assert_ok!(Pallet::<Test>::reject(
 			Origin::signed(ALICE),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..]),
 		));
-		assert_eq!(ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])), false)
+		assert_eq!(
+			ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])),
+			false
+		)
 	});
 }
 
@@ -128,17 +136,18 @@ fn reject_external_track() {
 			Origin::signed(ALICE),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..]),
-		).is_err());
+		)
+		.is_err());
 		set_members();
-		assert_ok!(
-			crate::Pallet::<Test>::reject(
+		assert_ok!(crate::Pallet::<Test>::reject(
 			Origin::signed(ALICE),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..]),
+		));
+		assert_eq!(
+			ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])),
+			false
 		)
-		);
-		assert_eq!(ProposalOf::<Test>::contains_key(0u64, BlakeTwo256::hash(&get_proposal()[..])), false)
-
 	});
 }
 
@@ -151,12 +160,14 @@ fn enact_proposal_should_work() {
 			Origin::signed(BOB),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..]),
-		).is_err());
+		)
+		.is_err());
 		assert!(crate::Pallet::<Test>::enact_proposal(
 			Origin::signed(BOB),
 			0u64,
 			BlakeTwo256::hash(&get_proposal()[..2]),
-		).is_err());
+		)
+		.is_err());
 		frame_system::Pallet::<Test>::set_block_number(10000);
 		assert_ok!(crate::Pallet::<Test>::enact_proposal(
 			Origin::signed(BOB),

@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use super::*;
 use crate::{Config, Pallet as Dao};
 use frame_benchmarking::{
@@ -5,7 +6,6 @@ use frame_benchmarking::{
 };
 use frame_system::RawOrigin as SystemOrigin;
 use primitives::AccountIdConversion;
-
 
 fn get_alice<T: Config>() -> T::AccountId {
 	account("alice", 1, 1)

@@ -16,6 +16,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::boxed_local)]
 #![allow(clippy::type_complexity)]
+#![allow(deprecated)]
 
 //!
 //! The emergency module is used in emergency situations, such as DAO cannot run normally due to some factors.
@@ -29,11 +30,11 @@
 
 use dao::{Box, Hash, Vec};
 use frame_support::{
-	transactional,
 	codec::{Decode, Encode},
 	dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable},
 	pallet_prelude::*,
 	traits::{Currency, ReservableCurrency},
+	transactional,
 };
 use frame_system::pallet_prelude::*;
 pub use pallet::*;

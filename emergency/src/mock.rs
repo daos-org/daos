@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
+#![allow(unused_imports)]
 
 use crate as emergency;
 use frame_support::{

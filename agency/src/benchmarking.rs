@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use super::*;
 use crate::{Call as CollectiveCall, Config, Pallet as Collective};
 use dao::Call as DaoCall;

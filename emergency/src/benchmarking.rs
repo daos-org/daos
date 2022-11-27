@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use super::*;
 use crate::{Config, Pallet as Emergency};
 use dao::Call as DaoCall;
@@ -60,18 +62,18 @@ fn get_members<T: Config>() -> T::DaoId {
 	dao_id
 }
 
-fn external<T: Config>() -> (T::DaoId, T::Hash) {
-	let (dao_id, second_id) = creat_dao::<T>();
-	let (proposal, hash) = get_call::<T>(dao_id);
-	assert!(Emergency::<T>::external_track(
-		SystemOrigin::Root.into(),
-		dao_id,
-		Box::new(proposal),
-		vec![1, 2, 3, 4]
-	)
-	.is_ok());
-	(dao_id, hash)
-}
+// fn external<T: Config>() -> (T::DaoId, T::Hash) {
+// 	let (dao_id, _second_id) = creat_dao::<T>();
+// 	let (proposal, hash) = get_call::<T>(dao_id);
+// 	assert!(Emergency::<T>::external_track(
+// 		SystemOrigin::Root.into(),
+// 		dao_id,
+// 		Box::new(proposal),
+// 		vec![1, 2, 3, 4]
+// 	)
+// 	.is_ok());
+// 	(dao_id, hash)
+// }
 
 fn internal<T: Config>() -> (T::DaoId, T::Hash) {
 	let dao_id = get_members::<T>();

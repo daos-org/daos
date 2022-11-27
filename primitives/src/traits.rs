@@ -68,7 +68,7 @@ impl<OuterOrigin: Clone, Argument: Clone> EnsureOriginWithArg<OuterOrigin, Argum
 		Ok(Default::default())
 	}
 	#[cfg(feature = "runtime-benchmarks")]
-	fn successful_origin(a: &Argument) -> OuterOrigin {
+	fn successful_origin(_a: &Argument) -> OuterOrigin {
 		todo!()
 	}
 }

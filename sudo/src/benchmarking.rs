@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use super::*;
 use crate::{Call as SudoCall, Config, Pallet as Sudo};
 use dao::Call as DaoCall;
