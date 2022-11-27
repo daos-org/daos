@@ -94,10 +94,10 @@ benchmarks! {
 
 	reject {
 		let (dao_id, hash) = internal::<T>();
-	}:_(SystemOrigin::Signed(get_alice::<T>()), dao_id, hash)
+	}:_(SystemOrigin::Signed(get_bob::<T>()), dao_id, hash)
 
 	enact_proposal {
 		let (dao_id, hash) = internal::<T>();
 		frame_system::Pallet::<T>::set_block_number(T::BlockNumber::from(10000u32));
-	}:_(SystemOrigin::Signed(get_alice::<T>()), dao_id, hash)
+	}:_(SystemOrigin::Signed(get_bob::<T>()), dao_id, hash)
 }
