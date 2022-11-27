@@ -14,6 +14,16 @@
 // limitations under the License.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::boxed_local)]
+#![allow(clippy::type_complexity)]
+
+
+//!
+//! The emergency module is used in emergency situations, such as DAO cannot run normally due to some factors.
+//!
+//! Internal personnel with authority to deal with emergencies, or ExternalOrigin,
+//! They can make a proposal. But their rights can only be used in relation to emergencies.
+//!
 
 pub use pallet::*;
 use frame_support::codec::{Decode, Encode};
@@ -21,7 +31,7 @@ use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 use dao::Hash;
 use frame_support::{
-	dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable, DispatchInfo, GetDispatchInfo, PostDispatchInfo},
+	dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable, },
 	pallet_prelude::*,
 	traits::{Currency, ReservableCurrency},
 };
@@ -228,11 +238,10 @@ pub mod pallet {
 				let proposal = ProposalOf::<T>::take(dao_id, proposal_hash)
 					.ok_or(Error::<T>::ProposalNotExists)?;
 
-				if let None = proposal.who {
-					if who != dao::Pallet::<T>::try_get_dao_account_id(dao_id)? && !Members::<T>::get(dao_id).contains(&who) {
-						return Err(Error::<T>::PermissionDenied)?;
-					}
+				if proposal.who.is_none() && who != dao::Pallet::<T>::try_get_dao_account_id(dao_id)? && !Members::<T>::get(dao_id).contains(&who) {
+					return Err(Error::<T>::PermissionDenied)?;
 				}
+
 
 				ensure!(Self::now() < proposal.end_block, Error::<T>::ProposalEnded);
 				if let Some(who) = proposal.who.clone() {
@@ -293,7 +302,7 @@ pub mod pallet {
 					let end_block = Self::now()
 						.checked_add(&T::TrackPeriod::get())
 						.ok_or(Error::<T>::StorageOverflow)?;
-					let pledge = if let None = who {
+					let pledge = if who.is_none() {
 						0u32.into()
 					} else {
 						T::MinPledge::get().max(PledgeOf::<T>::get(dao_id))
