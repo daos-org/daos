@@ -7,3 +7,4 @@ This template uses daos with very little extra code.
 4. The creator of DAO removes root privileges, and DAO achieves decentralization.
 5. DAO users implement steps 3 through the square or agency module replace of sudo module.
    That is, voting together to decide all transactions in the dao.
+6. If the DAO cannot run due to some Storage settings errors, please use the emergency module.
