@@ -115,6 +115,7 @@ impl emergency::Config for Test {
 	type Currency = Balances;
 	type MinPledge = MinPledge;
 	type TrackPeriod = TrackPeriod;
+	type WeightInfo = ();
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
