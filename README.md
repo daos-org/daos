@@ -12,10 +12,10 @@ We provide an abstraction layer to make it easier for each DAO to manage each re
 ## Develop
 * rust
 `curl https://sh.rustup.rs -sSf | sh`
-* Clone Project From Github  
+* Clone Project From Github
 
 `git clone https://github.com/DAOS-TEAM/daos.git`
-* Build  
+* Build
 
 ```angular2html
 cd daos
@@ -38,7 +38,7 @@ cargo doc --open
 ```asm
 git clone https://github.com/DICO-TEAM/dico-chain.git
 cd dico-chain
-./scripts/daos_benchmarkall.shdia
+./scripts/daos_benchmarkall.sh
 ```
 
 ## [Workflow](./document/workflow.md)
@@ -47,7 +47,7 @@ cd dico-chain
 The project is made available under the [Apache2.0](./LICENSE-APACHE2) license.
 
 ## Projects using daos
-* If you intend or are using daos, please add your project here  
+* If you intend or are using daos, please add your project here
 
 In alphabetical order
 * [Listen Network](https://github.com/listenofficial/listen-parachain)
