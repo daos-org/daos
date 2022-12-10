@@ -66,6 +66,7 @@ use primitives::{
 	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
+use codec::MaxEncodedLen;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
@@ -126,7 +127,7 @@ impl DefaultVote for MoreThanMajorityThenPrimeDefaultVote {
 }
 
 /// Origin for the collective module.
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(I))]
 pub enum RawOrigin<DaoId, I> {
 	/// It has been condoned by a given number of members of the collective from a given total.
