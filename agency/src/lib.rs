@@ -53,7 +53,8 @@
 //! 		.is_ok());
 //! ***
 
-
+#![allow(deprecated)]
+use codec::MaxEncodedLen;
 use frame_support::{
 	codec::{Decode, Encode},
 	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
@@ -66,7 +67,6 @@ use primitives::{
 	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
-use codec::MaxEncodedLen;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 use sp_runtime::{traits::Hash, RuntimeDebug};
 use sp_std::{marker::PhantomData, prelude::*, result};
@@ -183,12 +183,15 @@ pub mod pallet {
 			>;
 
 		/// The outer event type.
-		type RuntimeEvent: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type RuntimeEvent: From<Event<Self, I>>
+			+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The outer call dispatch type.
 		type Proposal: Parameter
-			+ Dispatchable<RuntimeOrigin = <Self as Config<I>>::RuntimeOrigin, PostInfo = PostDispatchInfo>
-			+ From<frame_system::Call<Self>>
+			+ Dispatchable<
+				RuntimeOrigin = <Self as Config<I>>::RuntimeOrigin,
+				PostInfo = PostDispatchInfo,
+			> + From<frame_system::Call<Self>>
 			+ From<Call<Self, I>>
 			+ From<dao::Call<Self>>
 			+ IsType<<Self as frame_system::Config>::RuntimeCall>
@@ -792,7 +795,8 @@ impl<T: Config<I>, I: 'static> SetCollectiveMembers<T::AccountId, T::DaoId, Disp
 
 #[allow(non_snake_case)]
 impl<T: Config<I>, I: 'static>
-	EnsureOriginWithArg<<T as pallet::Config<I>>::RuntimeOrigin, (T::DaoId, T::CallId)> for Pallet<T, I>
+	EnsureOriginWithArg<<T as pallet::Config<I>>::RuntimeOrigin, (T::DaoId, T::CallId)>
+	for Pallet<T, I>
 {
 	type Success = <T as dao::Config>::DaoId;
 

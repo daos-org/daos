@@ -40,7 +40,6 @@
 //! 		.is_ok());
 //! ***
 
-
 pub use codec::MaxEncodedLen;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{
@@ -121,7 +120,8 @@ pub mod pallet {
 				dao::Error::<T>::InVailCall
 			);
 			let call_id: T::CallId =
-				TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(*call.clone()).unwrap_or_default();
+				TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(*call.clone())
+					.unwrap_or_default();
 
 			let id = T::DoAsOrigin::try_origin(origin, &(dao_id, call_id))
 				.map_err(|_| dao::Error::<T>::BadOrigin)?;

@@ -595,8 +595,10 @@ pub mod pallet {
 					} else {
 						{
 							let call_id: T::CallId =
-								TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(x.proposal.clone())
-									.unwrap_or_default();
+								TryFrom::<<T as dao::Config>::RuntimeCall>::try_from(
+									x.proposal.clone(),
+								)
+								.unwrap_or_default();
 
 							if x.tally.ayes.saturating_add(x.tally.nays) >=
 								MinVoteWeightOf::<T>::get(dao_id, call_id)
@@ -817,7 +819,7 @@ impl<T: Config> Pallet<T> {
 					now.saturating_add(VotingPeriod::<T>::get(dao_id)),
 					proposal,
 					EnactmentPeriod::<T>::get(dao_id),
-				));
+				))
 			}
 		}
 		Err(Error::<T>::NoneWaiting)?

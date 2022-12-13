@@ -21,41 +21,29 @@ pub fn set_sudo() {
 		0u64,
 		Box::new(proposal),
 	)
-		.unwrap();
+	.unwrap();
 	assert_eq!(sudo::Account::<Test>::get(0u64), Some(1u64));
 }
 
 pub fn sudo_set_xxx() {
 	set_sudo();
-	let set_max_public_props = Call::Square(crate::Call::set_max_public_props {
-		dao_id: 0u64,
-		max: 100u32,
-	});
+	let set_max_public_props =
+		Call::Square(crate::Call::set_max_public_props { dao_id: 0u64, max: 100u32 });
 
-	let set_launch_period = Call::Square(crate::Call::set_launch_period {
-		dao_id: 0u64,
-		period: 1000u64,
-	});
+	let set_launch_period =
+		Call::Square(crate::Call::set_launch_period { dao_id: 0u64, period: 1000u64 });
 
-	let set_minimum_deposit = Call::Square(crate::Call::set_minimum_deposit{
-		dao_id: 0u64,
-		min: 100u64,
-	});
+	let set_minimum_deposit =
+		Call::Square(crate::Call::set_minimum_deposit { dao_id: 0u64, min: 100u64 });
 
-	let set_voting_period = Call::Square(crate::Call::set_voting_period {
-		dao_id: 0u64,
-		period: 1000u64,
-	});
+	let set_voting_period =
+		Call::Square(crate::Call::set_voting_period { dao_id: 0u64, period: 1000u64 });
 
-	let set_rerserve_period = Call::Square(crate::Call::set_rerserve_period {
-		dao_id: 0u64,
-		period: 1000u64,
-	});
+	let set_rerserve_period =
+		Call::Square(crate::Call::set_rerserve_period { dao_id: 0u64, period: 1000u64 });
 
-	let set_enactment_period = Call::Square(crate::Call::set_enactment_period {
-		dao_id: 0u64,
-		period: 1000u64,
-	});
+	let set_enactment_period =
+		Call::Square(crate::Call::set_enactment_period { dao_id: 0u64, period: 1000u64 });
 
 	assert_ok!(sudo::Pallet::<Test>::sudo(
 		Origin::signed(ALICE),
@@ -92,10 +80,7 @@ pub fn sudo_set_xxx() {
 		0u64,
 		Box::new(set_enactment_period)
 	));
-
-
 }
-
 
 pub fn propose() {
 	create_dao();
@@ -161,14 +146,17 @@ pub fn vote() {
 		Vote(100u64),
 		(),
 		Opinion::NAYS,
-	).is_err());
+	)
+	.is_err());
 	frame_system::Pallet::<Test>::set_block_number(10000);
 }
 
 pub fn enact() {
 	vote();
 	assert!(crate::Pallet::<Test>::enact_proposal(Origin::signed(ALICE), 0u64, 0u32).is_err());
-	frame_system::Pallet::<Test>::set_block_number(10000 + VotingPeriod::<Test>::get(0u64) + EnactmentPeriod::<Test>::get(0u64) - 2);
+	frame_system::Pallet::<Test>::set_block_number(
+		10000 + VotingPeriod::<Test>::get(0u64) + EnactmentPeriod::<Test>::get(0u64) - 2,
+	);
 	assert!(crate::Pallet::<Test>::enact_proposal(Origin::signed(ALICE), 0u64, 0u32).is_err());
 	frame_system::Pallet::<Test>::set_block_number(20000);
 	let ole_min_weight = MinVoteWeightOf::<Test>::get(0u64, 0u64);
@@ -184,7 +172,8 @@ pub fn enact() {
 		Vote(100u64),
 		(),
 		Opinion::NAYS,
-	).is_err());
+	)
+	.is_err());
 	assert!(crate::Pallet::<Test>::cancel_vote(Origin::signed(ALICE), 0u64, 0u32).is_err());
 }
 

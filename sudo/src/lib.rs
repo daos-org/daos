@@ -22,7 +22,7 @@
 //!
 //! This module, very useful in the early stage of DAO creation, can be used to set basic parameters,
 //! but it also means centralization. So to achieve true decentralization should `close_sudo`.
-
+#![allow(deprecated)]
 pub use dao::{self, BaseCallFilter};
 pub use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo};
 pub use pallet::*;
