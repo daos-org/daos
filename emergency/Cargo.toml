@@ -13,16 +13,16 @@ edition     = '2021'
 targets = ['x86_64-unknown-linux-gnu']
 
 [dependencies]
-scale-info 		      = { version = "2.1.1", default-features = false, features = ["derive"] }
-codec                 = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
+codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
 
-sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-std = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+sp-runtime = { version = "28.0.0", default-features = false }
+sp-std = { version = "12.0.0", default-features = false }
 
-frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
-frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+frame-benchmarking = { version = "25.0.0", default-features = false, optional = true }
+frame-support      = { version = "25.0.0", default-features = false }
+frame-system       = { version = "25.0.0", default-features = false }
+pallet-balances = { version = "25.0.0", default-features = false }
 
 # local
 dao = { path = "../create-dao", package = "daos-create-dao", default-features = false}
@@ -31,9 +31,9 @@ sudo = { path = "../sudo", package = "daos-sudo", default-features = false}
 
 [dev-dependencies]
 serde      = { version = "1.0.101" }
-sp-core    = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+sp-core    = { version = "25.0.0", default-features = false }
+sp-runtime = { version = "25.0.0", default-features = false }
+sp-io      = { version = "25.0.0", default-features = false }
 
 [features]
 default = ['std']

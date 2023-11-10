@@ -11,18 +11,18 @@ repository = "https://github.com/LISTEN-DAOS/daos.git"
 targets = ['x86_64-unknown-linux-gnu']
 
 [dependencies]
-scale-info 		      = { version = "2.1.1", default-features = false, features = ["derive"] }
-codec                 = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
+codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
 
-sp-runtime = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
-sp-std = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
-sp-core = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
-sp-io = { default-features = false,  git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25' }
+sp-runtime = { default-features = false,  version = "25.0.0" }
+sp-std = { default-features = false,  version = "12.0.0" }
+sp-core = { default-features = false,  version = "25.0.0" }
+sp-io = { default-features = false,  version = "25.0.0" }
 
-frame-benchmarking = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false, optional = true }
-frame-support      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-frame-system       = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-pallet-balances = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+frame-benchmarking = { version = "25.0.0", default-features = false, optional = true }
+frame-support      = { version = "25.0.0", default-features = false }
+frame-system       = { version = "25.0.0", default-features = false }
+pallet-balances = { version = "25.0.0", default-features = false }
 
 # local
 primitives = { path = "../primitives", package = "daos-primitives", default-features = false}
@@ -30,9 +30,9 @@ dao = { path = "../create-dao", package = "daos-create-dao", default-features = 
 
 [dev-dependencies]
 serde      = { version = "1.0.101" }
-sp-core    = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
-sp-io      = { git = 'https://github.com/paritytech/substrate', branch = 'polkadot-v0.9.25', default-features = false }
+sp-core    = { version = "25.0.0", default-features = false }
+sp-runtime = { version = "25.0.0", default-features = false }
+sp-io      = { version = "25.0.0", default-features = false }
 
 [features]
 default = ['std']

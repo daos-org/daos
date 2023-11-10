@@ -40,14 +40,16 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSudo Account (r:0 w:1)
             // Storage: CreateDao Daos (r:0 w:1)
         fn create_dao() -> Weight {
-        (28_576_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(3 as Weight))
+                Weight::from_all(2000_0000)
+        // (28_576_000 as Weight)
+        //     .saturating_add(T::DbWeight::get().reads(1 ))
+        //     .saturating_add(T::DbWeight::get().writes(3))
         }
             // Storage: CreateDao Daos (r:1 w:0)
         fn dao_remark() -> Weight {
-        (11_086_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
+                Weight::from_all(2000_0000)
+        // (11_086_000 as Weight)
+        //     .saturating_add(T::DbWeight::get().reads(1 as Weight))
         }
     }
 
@@ -57,13 +59,15 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoSudo Account (r:0 w:1)
             // Storage: CreateDao Daos (r:0 w:1)
         fn create_dao() -> Weight {
-        (28_576_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(3 as Weight))
+                Weight::from_all(2000_0000)
+        // (28_576_000 as Weight)
+        //     .saturating_add(RocksDbWeight::get().reads(1 as Weight))
+        //     .saturating_add(RocksDbWeight::get().writes(3 as Weight))
         }
             // Storage: CreateDao Daos (r:1 w:0)
         fn dao_remark() -> Weight {
-        (11_086_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
+                Weight::from_all(2000_0000)
+        // (11_086_000 as Weight)
+        //     .saturating_add(RocksDbWeight::get().reads(1 as Weight))
         }
     }

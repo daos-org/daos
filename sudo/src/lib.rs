@@ -24,7 +24,7 @@
 //! but it also means centralization. So to achieve true decentralization should `close_sudo`.
 
 pub use dao::{self, BaseCallFilter};
-pub use frame_support::{traits::UnfilteredDispatchable, weights::GetDispatchInfo};
+pub use frame_support::{traits::UnfilteredDispatchable};
 pub use pallet::*;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
 pub use sp_std::{fmt::Debug, result};
@@ -48,7 +48,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// Weight information for extrinsics in this pallet.
 		type WeightInfo: WeightInfo;
 	}

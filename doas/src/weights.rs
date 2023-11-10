@@ -36,8 +36,7 @@ pub struct DicoWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoCollective EnsureOrigins (r:1 w:0)
         fn do_as_agency() -> Weight {
-        (13_000_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
+            Weight::from_all(2000_0000)
         }
     }
 
@@ -46,7 +45,6 @@ pub struct DicoWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoCollective EnsureOrigins (r:1 w:0)
         fn do_as_agency() -> Weight {
-        (13_000_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
+            Weight::from_all(2000_0000)
         }
     }

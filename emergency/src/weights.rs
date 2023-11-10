@@ -43,23 +43,17 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoEmergency Members (r:0 w:1)
         fn set_members() -> Weight {
-        (29_818_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoEmergency PledgeOf (r:0 w:1)
         fn set_pledge() -> Weight {
-        (29_283_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: DaoEmergency HashesOf (r:1 w:1)
             // Storage: DaoEmergency ProposalOf (r:0 w:1)
         fn external_track() -> Weight {
-        (36_266_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(1 as Weight))
-            .saturating_add(T::DbWeight::get().writes(2 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:1 w:1)
             // Storage: DaoEmergency Members (r:1 w:0)
@@ -67,18 +61,14 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoEmergency PledgeOf (r:1 w:0)
             // Storage: DaoEmergency ProposalOf (r:0 w:1)
         fn internal_track() -> Weight {
-        (76_339_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(4 as Weight))
-            .saturating_add(T::DbWeight::get().writes(3 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:2 w:2)
             // Storage: Currencies UsersNumber (r:1 w:1)
             // Storage: DaoEmergency HashesOf (r:1 w:1)
             // Storage: DaoEmergency ProposalOf (r:1 w:1)
         fn reject() -> Weight {
-        (93_999_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(5 as Weight))
-            .saturating_add(T::DbWeight::get().writes(5 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:2 w:2)
             // Storage: Currencies UsersNumber (r:1 w:1)
@@ -86,9 +76,7 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoEmergency ProposalOf (r:1 w:1)
             // Storage: CreateDao Daos (r:1 w:0)
         fn enact_proposal() -> Weight {
-        (102_780_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(6 as Weight))
-            .saturating_add(T::DbWeight::get().writes(5 as Weight))
+            Weight::from_all(2000_0000)
         }
     }
 
@@ -97,23 +85,17 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoEmergency Members (r:0 w:1)
         fn set_members() -> Weight {
-        (29_818_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoEmergency PledgeOf (r:0 w:1)
         fn set_pledge() -> Weight {
-        (29_283_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: DaoEmergency HashesOf (r:1 w:1)
             // Storage: DaoEmergency ProposalOf (r:0 w:1)
         fn external_track() -> Weight {
-        (36_266_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(1 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(2 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:1 w:1)
             // Storage: DaoEmergency Members (r:1 w:0)
@@ -121,18 +103,14 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoEmergency PledgeOf (r:1 w:0)
             // Storage: DaoEmergency ProposalOf (r:0 w:1)
         fn internal_track() -> Weight {
-        (76_339_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(4 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(3 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:2 w:2)
             // Storage: Currencies UsersNumber (r:1 w:1)
             // Storage: DaoEmergency HashesOf (r:1 w:1)
             // Storage: DaoEmergency ProposalOf (r:1 w:1)
         fn reject() -> Weight {
-        (93_999_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(5 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(5 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: System Account (r:2 w:2)
             // Storage: Currencies UsersNumber (r:1 w:1)
@@ -140,8 +118,6 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: DaoEmergency ProposalOf (r:1 w:1)
             // Storage: CreateDao Daos (r:1 w:0)
         fn enact_proposal() -> Weight {
-        (102_780_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(6 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(5 as Weight))
+            Weight::from_all(2000_0000)
         }
     }

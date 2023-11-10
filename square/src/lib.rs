@@ -33,11 +33,14 @@
 extern crate core;
 
 pub use codec::{Decode, Encode};
-use dao::{self, Hash, Vec};
-use frame_support::dispatch::{DispatchResult as DResult, UnfilteredDispatchable};
+use sp_runtime::traits::Hash;
+use dao::{self, Vec};
+ // use daos_sudo::UnfilteredDispatchable;
+ use frame_support::traits::UnfilteredDispatchable;
+use frame_support::dispatch::{DispatchResult as DResult,};
 pub use frame_support::{
 	traits::{Currency, Defensive, Get, ReservableCurrency},
-	BoundedVec, RuntimeDebug,
+	BoundedVec, 
 };
 pub use pallet::*;
 use scale_info::TypeInfo;
@@ -50,6 +53,8 @@ use sp_std::boxed::Box;
 pub use sp_std::{fmt::Debug, result};
 pub use traits::*;
 use weights::WeightInfo;
+// use daos_sudo::UnfilteredDispatchable;
+
 pub type AssetId = u32;
 pub type PropIndex = u32;
 pub type ReferendumIndex = u32;
@@ -66,7 +71,7 @@ pub mod traits;
 pub mod weights;
 
 /// Voting Statistics.
-#[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Default, Clone, PartialEq, Eq,  TypeInfo)]
 pub struct Tally<Balance> {
 	/// The number of aye votes, expressed in terms of post-conviction lock-vote.
 	pub ayes: Balance,
@@ -75,7 +80,7 @@ pub struct Tally<Balance> {
 }
 
 /// vote yes or no
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq,  TypeInfo, Debug)]
 pub enum Opinion {
 	/// Agree.
 	AYES,
@@ -84,7 +89,7 @@ pub enum Opinion {
 }
 
 /// Information about individual votes.
-#[derive(Encode, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Default, Clone, PartialEq, Eq,  TypeInfo)]
 pub struct VoteInfo<DaoId, ConcreteId, Pledge, BlockNumber, VoteWeight, Opinion, ReferendumIndex> {
 	/// The id of the Dao where the vote is located.
 	dao_id: DaoId,
@@ -103,7 +108,7 @@ pub struct VoteInfo<DaoId, ConcreteId, Pledge, BlockNumber, VoteWeight, Opinion,
 }
 
 /// Info regarding an ongoing referendum.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq,  TypeInfo)]
 pub struct ReferendumStatus<BlockNumber, Call, Balance> {
 	/// When voting on this referendum will end.
 	pub end: BlockNumber,
@@ -116,7 +121,7 @@ pub struct ReferendumStatus<BlockNumber, Call, Balance> {
 }
 
 /// Info regarding a referendum, present or past.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq,  TypeInfo)]
 pub enum ReferendumInfo<BlockNumber, Call, Balance> {
 	/// Referendum is happening, the arg is the block number at which it will end.
 	Ongoing(ReferendumStatus<BlockNumber, Call, Balance>),
@@ -138,7 +143,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 		/// What to stake when voting in a referendum.
 		type Pledge: Clone
 			+ Default
@@ -150,7 +155,7 @@ pub mod pallet {
 				Self::AccountId,
 				Self::DaoId,
 				Self::Conviction,
-				Self::BlockNumber,
+				u32,
 				DispatchError,
 			>;
 		/// The number of times the vote is magnified.
@@ -158,7 +163,7 @@ pub mod pallet {
 			+ Default
 			+ Copy
 			+ Parameter
-			+ ConvertInto<Self::BlockNumber>
+			+ ConvertInto<u32>
 			+ ConvertInto<BalanceOf<Self>>;
 		/// Operations related to native assets.
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
@@ -188,15 +193,15 @@ pub mod pallet {
 		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, MaxPublicPropsOnEmpty>;
 
 	#[pallet::type_value]
-	pub fn LaunchPeriodOnEmpty<T: Config>() -> T::BlockNumber {
-		T::BlockNumber::from(900u32)
+	pub fn LaunchPeriodOnEmpty<T: Config>() -> u32 {
+		u32::from(900u32)
 	}
 
 	/// How soon can a referendum be called.
 	#[pallet::storage]
 	#[pallet::getter(fn launch_period)]
 	pub type LaunchPeriod<T: Config> =
-		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, LaunchPeriodOnEmpty<T>>;
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, LaunchPeriodOnEmpty<T>>;
 
 	/// Minimum stake per person when making public proposals.
 	#[pallet::storage]
@@ -205,37 +210,37 @@ pub mod pallet {
 		StorageMap<_, Identity, T::DaoId, BalanceOf<T>, ValueQuery>;
 
 	#[pallet::type_value]
-	pub fn VotingPeriodOnEmpty<T: Config>() -> T::BlockNumber {
-		T::BlockNumber::from(900u32)
+	pub fn VotingPeriodOnEmpty<T: Config>() -> u32 {
+		u32::from(900u32)
 	}
 
 	/// How long each proposal can be voted on.
 	#[pallet::storage]
 	#[pallet::getter(fn voting_period)]
 	pub type VotingPeriod<T: Config> =
-		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, VotingPeriodOnEmpty<T>>;
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, VotingPeriodOnEmpty<T>>;
 
 	#[pallet::type_value]
-	pub fn ReservePeriodOnEmpty<T: Config>() -> T::BlockNumber {
-		T::BlockNumber::from(900u32)
+	pub fn ReservePeriodOnEmpty<T: Config>() -> u32 {
+		u32::from(900u32)
 	}
 
 	/// How long does it take to release the mortgage.
 	#[pallet::storage]
 	#[pallet::getter(fn reserve_period)]
 	pub type ReservePeriod<T: Config> =
-		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, ReservePeriodOnEmpty<T>>;
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, ReservePeriodOnEmpty<T>>;
 
 	#[pallet::type_value]
-	pub fn EnactmentPeriodOnEmpty<T: Config>() -> T::BlockNumber {
-		T::BlockNumber::from(900u32)
+	pub fn EnactmentPeriodOnEmpty<T: Config>() -> u32 {
+		u32::from(900u32)
 	}
 
 	/// How soon after voting closes the proposal can be implemented.
 	#[pallet::storage]
 	#[pallet::getter(fn enactment_period)]
 	pub type EnactmentPeriod<T: Config> =
-		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, EnactmentPeriodOnEmpty<T>>;
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, EnactmentPeriodOnEmpty<T>>;
 
 	/// The public proposals. Unsorted. The second item is the proposal's hash.
 	#[pallet::storage]
@@ -266,7 +271,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn reserve_of)]
 	pub type ReserveOf<T: Config> =
-		StorageMap<_, Identity, T::AccountId, Vec<(BalanceOf<T>, T::BlockNumber)>, ValueQuery>;
+		StorageMap<_, Identity, T::AccountId, Vec<(BalanceOf<T>, u32)>, ValueQuery>;
 
 	/// Referendum specific information.
 	#[pallet::storage]
@@ -277,7 +282,7 @@ pub mod pallet {
 		T::DaoId,
 		Identity,
 		ReferendumIndex,
-		ReferendumInfo<T::BlockNumber, <T as dao::Config>::Call, BalanceOf<T>>,
+		ReferendumInfo<u32, <T as dao::Config>::Call, BalanceOf<T>>,
 	>;
 
 	/// Number of referendums so far.
@@ -298,7 +303,7 @@ pub mod pallet {
 				T::DaoId,
 				T::ConcreteId,
 				T::Pledge,
-				T::BlockNumber,
+				u32,
 				BalanceOf<T>,
 				Opinion,
 				ReferendumIndex,
@@ -316,7 +321,7 @@ pub mod pallet {
 	/// When the referendum was last launched.
 	#[pallet::storage]
 	#[pallet::getter(fn launch_tag)]
-	pub type LaunchTag<T: Config> = StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery>;
+	pub type LaunchTag<T: Config> = StorageMap<_, Identity, T::DaoId, u32, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -342,15 +347,15 @@ pub mod pallet {
 		/// Set the maximum number of proposals at the same time.
 		SetMaxPublicProps { dao_id: T::DaoId, max: u32 },
 		/// Set the referendum interval.
-		SetLaunchPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetLaunchPeriod { dao_id: T::DaoId, period: u32 },
 		/// Set the minimum amount a proposal needs to stake.
 		SetMinimumDeposit { dao_id: T::DaoId, min: BalanceOf<T> },
 		/// Set the voting length of the referendum.
-		SetVotingPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetVotingPeriod { dao_id: T::DaoId, period: u32 },
 		/// Set the length of time that can be unreserved.
-		SetReservePeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetReservePeriod { dao_id: T::DaoId, period: u32 },
 		/// Set the time to delay the execution of the proposal.
-		SetEnactmentPeriod { dao_id: T::DaoId, period: T::BlockNumber },
+		SetEnactmentPeriod { dao_id: T::DaoId, period: u32 },
 	}
 
 	// Errors inform users that something went wrong.
@@ -435,7 +440,7 @@ pub mod pallet {
 			deposit.0.push(who.clone());
 			<DepositOf<T>>::insert(dao_id, proposal, deposit);
 			let unreserved_block = Self::now()
-				.checked_add(&ReservePeriod::<T>::get(dao_id))
+				.checked_add(ReservePeriod::<T>::get(dao_id))
 				.ok_or(Error::<T>::Overflow)?;
 			ReserveOf::<T>::append(who, (deposit_amount, unreserved_block));
 			Self::deposit_event(Event::<T>::Second(dao_id, deposit_amount));
@@ -452,7 +457,7 @@ pub mod pallet {
 			let dao_start_time = dao::Pallet::<T>::try_get_dao(dao_id)?.start_block;
 			// (now - dao_start_time) / LaunchPeriod > tag
 			ensure!(
-				tag.checked_mul(&LaunchPeriod::<T>::get(dao_id)).ok_or(Error::<T>::Overflow)? <
+				tag.checked_mul(LaunchPeriod::<T>::get(dao_id)).ok_or(Error::<T>::Overflow)? <
 					(now - dao_start_time),
 				Error::<T>::NotTableTime
 			);
@@ -720,7 +725,7 @@ pub mod pallet {
 		pub fn set_launch_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			period: T::BlockNumber,
+			period: u32,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			LaunchPeriod::<T>::insert(dao_id, period);
@@ -752,7 +757,7 @@ pub mod pallet {
 		pub fn set_voting_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			period: T::BlockNumber,
+			period: u32,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			VotingPeriod::<T>::insert(dao_id, period);
@@ -768,7 +773,7 @@ pub mod pallet {
 		pub fn set_rerserve_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			period: T::BlockNumber,
+			period: u32,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			ReservePeriod::<T>::insert(dao_id, period);
@@ -784,7 +789,7 @@ pub mod pallet {
 		pub fn set_enactment_period(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			period: T::BlockNumber,
+			period: u32,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			EnactmentPeriod::<T>::insert(dao_id, period);
@@ -825,9 +830,9 @@ impl<T: Config> Pallet<T> {
 
 	fn inject_referendum(
 		dao_id: T::DaoId,
-		end: T::BlockNumber,
+		end: u32,
 		proposal: <T as dao::Config>::Call,
-		delay: T::BlockNumber,
+		delay: u32,
 	) -> ReferendumIndex {
 		let ref_index = Self::referendum_count(dao_id);
 		ReferendumCount::<T>::insert(dao_id, ref_index + 1);
@@ -838,7 +843,10 @@ impl<T: Config> Pallet<T> {
 		ref_index
 	}
 
-	fn now() -> T::BlockNumber {
-		frame_system::Pallet::<T>::current_block_number()
+	fn now() -> u32 {
+		// fixme
+		// frame_system::Pallet::<T>::current_block_number()
+		100
 	}
+
 }

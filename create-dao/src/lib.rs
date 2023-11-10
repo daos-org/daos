@@ -31,11 +31,12 @@
 //! * [Vault Module](https://github.com/DICO-TEAM/dico-chain/blob/main/pallets/vc/src/lib.rs)
 //! * [How to use daos for Vault Module](https://github.com/DICO-TEAM/dico-chain/blob/main/runtime/tico/src/vc.rs)
 
-pub use codec::MaxEncodedLen;
+pub use codec::{MaxEncodedLen, Decode, Encode};
 pub use frame_support::{
-	codec::{Decode, Encode},
+	// codec::{Decode, Encode},
 	traits::IsSubType,
 };
+use frame_support::{sp_runtime::traits::BlockNumberProvider, };
 pub use pallet::*;
 pub use primitives::{
 	traits::{AfterCreate, BaseCallFilter, TryCreate},
@@ -43,7 +44,7 @@ pub use primitives::{
 	AccountIdConversion,
 };
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
-use sp_runtime::traits::BlockNumberProvider;
+// use sp_runtime::traits::BlockNumberProvider;
 pub use sp_runtime::{traits::Hash, RuntimeDebug};
 pub use sp_std::{
 	marker::PhantomData,
@@ -61,7 +62,7 @@ pub mod tests;
 mod benchmarking;
 pub mod weights;
 /// DAO's status.
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
 pub enum Status {
 	/// In use.
 	Active,
@@ -70,7 +71,7 @@ pub enum Status {
 }
 
 /// DAO specific information
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo, MaxEncodedLen)]
 pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
 	/// creator of DAO.
 	creator: AccountId,
@@ -81,7 +82,7 @@ pub struct DaoInfo<AccountId, BlockNumber, ConcreteId, Status> {
 	/// DAO account id.
 	pub dao_account_id: AccountId,
 	/// Description of the DAO.
-	describe: Vec<u8>,
+	// describe: Vec<u8>,
 	/// State of the DAO.
 	status: Status,
 }
@@ -91,7 +92,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo, pallet_prelude::*, traits::UnfilteredDispatchable,
-		weights::GetDispatchInfo,
+		// weights::GetDispatchInfo,
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::{CheckedAdd, One};
@@ -100,16 +101,16 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// All calls supported by DAO.
 		type Call: Parameter
-			+ UnfilteredDispatchable<Origin = Self::Origin>
-			+ GetDispatchInfo
+			+ UnfilteredDispatchable<RuntimeOrigin = Self::RuntimeOrigin>
+			// + GetDispatchInfo
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self>>
 			+ IsSubType<Call<Self>>
-			+ IsType<<Self as frame_system::Config>::Call>;
+			+ IsType<<Self as frame_system::Config>::RuntimeCall>;
 
 		/// Each Call has its own id.
 		type CallId: Parameter
@@ -144,7 +145,7 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
-	#[pallet::without_storage_info]
+	// #[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	/// All DAOs that have been created.
@@ -154,7 +155,7 @@ pub mod pallet {
 		_,
 		Identity,
 		T::DaoId,
-		DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>,
+		DaoInfo<T::AccountId, u32, T::ConcreteId, Status>,
 	>;
 
 	/// The id of the next dao to be created.
@@ -207,14 +208,16 @@ pub mod pallet {
 				concrete_id.try_create(creator.clone(), dao_id)?;
 			}
 
+			// fixme
 			let now = frame_system::Pallet::<T>::current_block_number();
+
 			Daos::<T>::insert(
 				dao_id,
 				DaoInfo {
 					creator: creator.clone(),
-					start_block: now,
+					start_block: 100,
 					concrete_id,
-					describe,
+					// describe,
 					status: Status::Active,
 					dao_account_id: concrete_id.into_account(),
 				},
@@ -250,7 +253,7 @@ pub mod pallet {
 
 		pub fn try_get_dao(
 			dao_id: <T as pallet::Config>::DaoId,
-		) -> Result<DaoInfo<T::AccountId, T::BlockNumber, T::ConcreteId, Status>, DispatchError> {
+		) -> Result<DaoInfo<T::AccountId, u32, T::ConcreteId, Status>, DispatchError> {
 			let dao = Daos::<T>::get(dao_id).ok_or(Error::<T>::DaoNotExists)?;
 			Ok(dao)
 		}

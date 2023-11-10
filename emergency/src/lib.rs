@@ -28,10 +28,12 @@
 //! Anyone can reject internal proposals.
 //!
 
-use dao::{Box, Hash, Vec};
+use dao::{Box, Vec};
+use codec::{Decode, Encode};
+use frame_support::traits::UnfilteredDispatchable;
+use sp_runtime::traits::Hash;
 use frame_support::{
-	codec::{Decode, Encode},
-	dispatch::{DispatchResultWithPostInfo, UnfilteredDispatchable},
+	dispatch::{DispatchResultWithPostInfo},
 	pallet_prelude::*,
 	traits::{Currency, ReservableCurrency},
 	transactional,
@@ -79,10 +81,10 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// An external origin that can submit urgent proposals to the DAO.
-		type ExternalOrigin: EnsureOrigin<Self::Origin>;
+		type ExternalOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 		/// Operations related to funds.
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// The minimum pledge amount required by the system. Each DAO cannot be lower than this value.
@@ -90,7 +92,7 @@ pub mod pallet {
 		type MinPledge: Get<BalanceOf<Self>>;
 		/// How long the proposal takes.
 		#[pallet::constant]
-		type TrackPeriod: Get<Self::BlockNumber>;
+		type TrackPeriod: Get<u32>;
 		type WeightInfo: WeightInfo;
 	}
 
@@ -123,7 +125,7 @@ pub mod pallet {
 		T::DaoId,
 		Identity,
 		T::Hash,
-		ProposalInfo<T::AccountId, <T as dao::Config>::Call, BalanceOf<T>, T::BlockNumber>,
+		ProposalInfo<T::AccountId, <T as dao::Config>::Call, BalanceOf<T>, u32>,
 	>;
 
 	#[pallet::event]
@@ -276,8 +278,11 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
-		fn now() -> T::BlockNumber {
-			frame_system::Pallet::<T>::current_block_number()
+		// fixme
+		fn now() -> u32 {
+
+			// frame_system::Pallet::<T>::current_block_number()
+			100
 		}
 
 		fn try_propose(
@@ -291,7 +296,7 @@ pub mod pallet {
 				if !hashes.contains(&proposal_hash) {
 					hashes.push(proposal_hash);
 					let end_block = Self::now()
-						.checked_add(&T::TrackPeriod::get())
+						.checked_add(T::TrackPeriod::get())
 						.ok_or(Error::<T>::StorageOverflow)?;
 					let pledge = if who.is_none() {
 						0u32.into()

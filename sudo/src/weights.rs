@@ -40,22 +40,17 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:0)
         fn sudo() -> Weight {
-        (35_609_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:1)
         fn set_sudo_account() -> Weight {
-        (30_967_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:1)
         fn close_sudo() -> Weight {
-        (30_713_000 as Weight)
-            .saturating_add(T::DbWeight::get().reads(2 as Weight))
-            .saturating_add(T::DbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
     }
 
@@ -64,21 +59,16 @@ pub struct DaosWeight<T>(PhantomData<T>);
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:0)
         fn sudo() -> Weight {
-        (35_609_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:1)
         fn set_sudo_account() -> Weight {
-        (30_967_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
             // Storage: CreateDao Daos (r:1 w:0)
             // Storage: DaoSudo Account (r:1 w:1)
         fn close_sudo() -> Weight {
-        (30_713_000 as Weight)
-            .saturating_add(RocksDbWeight::get().reads(2 as Weight))
-            .saturating_add(RocksDbWeight::get().writes(1 as Weight))
+            Weight::from_all(2000_0000)
         }
     }

@@ -43,7 +43,7 @@
 pub use codec::MaxEncodedLen;
 use dao::{self, BaseCallFilter};
 pub use frame_support::{
-	dispatch::{DispatchError, DispatchResult},
+	dispatch::{DispatchResult},
 	pallet_prelude::StorageDoubleMap,
 	Parameter,
 };
@@ -78,11 +78,11 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config + dao::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// Origin must be from collective.
 		type DoAsOrigin: EnsureOriginWithArg<
-			Self::Origin,
+			Self::RuntimeOrigin,
 			(Self::DaoId, Self::CallId),
 			Success = Self::DaoId,
 		>;

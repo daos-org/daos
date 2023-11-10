@@ -53,20 +53,23 @@
 //! 		.is_ok());
 //! ***
 
+use codec::{Decode, Encode};
 use frame_support::{
-	codec::{Decode, Encode},
-	dispatch::{DispatchError, DispatchResultWithPostInfo, Dispatchable, PostDispatchInfo},
+	dispatch::{DispatchResultWithPostInfo, PostDispatchInfo, GetDispatchInfo},
 	ensure,
 	traits::{Get, StorageVersion},
-	weights::{GetDispatchInfo, Weight},
+	weights::{Weight},
 };
 pub use pallet::*;
 use primitives::{
 	traits::{EnsureOriginWithArg, SetCollectiveMembers},
 	types::{DoAsEnsureOrigin, MemberCount, Proportion, ProposalIndex},
 };
+
+use frame_support::sp_runtime::traits::Hash;
+use frame_support::pallet_prelude::DispatchError;
 pub use scale_info::{prelude::boxed::Box, TypeInfo};
-use sp_runtime::{traits::Hash, RuntimeDebug};
+use sp_runtime::{RuntimeDebug, traits::Dispatchable};
 use sp_std::{marker::PhantomData, prelude::*, result};
 use weights::WeightInfo;
 #[cfg(feature = "runtime-benchmarks")]
@@ -181,15 +184,15 @@ pub mod pallet {
 			>;
 
 		/// The outer event type.
-		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The outer call dispatch type.
 		type Proposal: Parameter
-			+ Dispatchable<Origin = <Self as Config<I>>::Origin, PostInfo = PostDispatchInfo>
+			+ Dispatchable<RuntimeOrigin = <Self as Config<I>>::Origin, PostInfo = PostDispatchInfo>
 			+ From<frame_system::Call<Self>>
 			+ From<Call<Self, I>>
 			+ From<dao::Call<Self>>
-			+ IsType<<Self as frame_system::Config>::Call>
+			+ IsType<<Self as frame_system::Config>::RuntimeCall>
 			+ GetDispatchInfo;
 
 		/// External transactions that collectives can execute directly.
@@ -242,15 +245,15 @@ pub mod pallet {
 		StorageMap<_, Identity, <T as dao::Config>::DaoId, T::AccountId>;
 
 	#[pallet::type_value]
-	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> T::BlockNumber {
-		T::BlockNumber::from(500u32)
+	pub fn MotionDurationOnEmpty<T: Config<I>, I: 'static>() -> u32 {
+		u32::from(500u32)
 	}
 
 	/// The time-out for council motions.
 	#[pallet::storage]
 	#[pallet::getter(fn motion_duration)]
 	pub type MotionDuration<T: Config<I>, I: 'static = ()> =
-		StorageMap<_, Identity, T::DaoId, T::BlockNumber, ValueQuery, MotionDurationOnEmpty<T, I>>;
+		StorageMap<_, Identity, T::DaoId, u32, ValueQuery, MotionDurationOnEmpty<T, I>>;
 
 	#[pallet::type_value]
 	pub fn MaxProposalsOnEmpty<T: Config<I>, I: 'static>() -> ProposalIndex {
@@ -296,7 +299,7 @@ pub mod pallet {
 		T::DaoId,
 		Identity,
 		T::Hash,
-		Votes<T::AccountId, T::BlockNumber>,
+		Votes<T::AccountId, u32>,
 		OptionQuery,
 	>;
 
@@ -337,7 +340,7 @@ pub mod pallet {
 		/// A proposal was closed because its threshold was reached or after its duration was up.
 		Closed { proposal_hash: T::Hash, yes: MemberCount, no: MemberCount },
 		/// Set the voting duration for a proposal in each DAO.
-		SetMotionDuration { dao_id: T::DaoId, duration: T::BlockNumber },
+		SetMotionDuration { dao_id: T::DaoId, duration: u32 },
 		/// Set a cap on the number of proposals in each DAO.
 		SetMaxProposals { dao_id: T::DaoId, max: ProposalIndex },
 		/// Set the upper limit of the number of council members in each DAO.
@@ -450,8 +453,9 @@ pub mod pallet {
 			<ProposalOf<T, I>>::insert(dao_id, proposal_hash, *proposal);
 			let votes = {
 				let end =
-					frame_system::Pallet::<T>::block_number() + MotionDuration::<T, I>::get(dao_id);
-				Votes { index, threshold, ayes: vec![who.clone()], nays: vec![], end }
+					frame_system::Pallet::<T>::block_number() + MotionDuration::<T, I>::get(dao_id).into();
+				// fixme
+				Votes { index, threshold, ayes: vec![who.clone()], nays: vec![], end: 100 }
 			};
 			<Voting<T, I>>::insert(dao_id, proposal_hash, votes);
 
@@ -552,10 +556,11 @@ pub mod pallet {
 			}
 
 			// Only allow actual closing of the proposal after the voting period has ended.
-			ensure!(
-				frame_system::Pallet::<T>::block_number() >= voting.end,
-				Error::<T, I>::TooEarly
-			);
+			// fixme
+			// ensure!(
+			// 	frame_system::Pallet::<T>::block_number() >= voting.end,
+			// 	Error::<T, I>::TooEarly
+			// );
 
 			let prime_vote = Self::prime(dao_id).map(|who| voting.ayes.iter().any(|a| a == &who));
 
@@ -603,7 +608,7 @@ pub mod pallet {
 		pub fn set_motion_duration(
 			origin: OriginFor<T>,
 			dao_id: T::DaoId,
-			duration: T::BlockNumber,
+			duration: u32,
 		) -> DispatchResultWithPostInfo {
 			dao::Pallet::<T>::ensrue_dao_root(origin, dao_id)?;
 			MotionDuration::<T, I>::insert(dao_id, duration);

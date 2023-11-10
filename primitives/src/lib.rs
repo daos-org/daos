@@ -16,8 +16,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "128"]
 #![allow(clippy::wrong_self_convention)]
-pub use codec::MaxEncodedLen;
-pub use frame_support::codec::{Decode, Encode};
+pub use codec::{MaxEncodedLen, Decode, Encode};
+// pub use frame_support::codec::{Decode, Encode};
 pub use scale_info::TypeInfo;
 pub use sp_runtime::RuntimeDebug;
 pub use sp_std::{prelude::*, result, vec};
